@@ -1,0 +1,15 @@
+[
+  {
+    "key": "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "key_preview": "sk-xxxxxxx...xxxx",
+    "valid": true,
+    "balance": 0.0,
+    "balance_details": [{"currency": "USD", "total_balance": 0.0, "granted_balance": 0.0, "tipped_balance": 0.0}],
+    "primary_currency": "USD",
+    "balance_usd": 0.0,
+    "balance_cny": 0.0,
+    "reason": "",
+    "repos": [{"repo": "example-user/example-repo", "file": "config/.env", "url": "https://github.com/example-user/example-repo/blob/main/config/.env"}],
+    "verified_at": "2026-01-01T00:00:00.000000"
+  }
+]

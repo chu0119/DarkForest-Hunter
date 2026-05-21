@@ -1,0 +1,98 @@
+# DeepSeek Key Hunter Query Library (v5 - 95 entries, hot→cold ordered)
+# Generated 2026-05-20 with time-filtered queries for fresh results
+deepseek sk- filename:java
+deepseek sk- filename:properties
+deepseek sk- filename:gradle
+deepseek sk- filename:kt
+deepseek sk- filename:php
+api.deepseek.com sk- filename:php
+deepseek sk- language:Python NOT env NOT export
+deepseek sk- filename:py NOT env
+deepseek OpenAI(api_key sk- filename:py
+deepseek client sk- filename:py
+deepseek def sk- filename:py
+deepseek requests sk- filename:py
+api.deepseek.com sk- filename:py
+deepseek sk- filename:env
+deepseek sk- filename:env.local
+deepseek sk- filename:env.production
+deepseek sk- filename:env.development
+deepseek sk- filename:env.example
+deepseek sk- filename:env.sample
+deepseek sk- filename:env.backup
+deepseek sk- filename:credentials
+deepseek sk- filename:secrets
+deepseek sk- filename:yml
+deepseek sk- filename:yaml
+deepseek sk- filename:json
+deepseek sk- filename:toml
+deepseek sk- filename:cfg
+deepseek sk- filename:ini
+deepseek sk- filename:conf
+deepseek sk- filename:config
+deepseek sk- filename:dart
+api.deepseek.com sk- filename:dart
+deepseek sk- filename:swift
+deepseek sk- filename:sh
+deepseek sk- filename:zsh
+deepseek sk- filename:bash
+deepseek sk- filename:fish
+deepseek sk- filename:js
+deepseek sk- filename:ts
+deepseek API_KEY sk- filename:js
+deepseek sk- filename:cpp
+deepseek sk- filename:go
+deepseek sk- filename:cs
+deepseek sk- filename:ipynb
+DEEPSEEK_API_KEY sk- filename:ipynb
+deepseek sk- filename:dockerfile
+deepseek sk- filename:docker-compose
+deepseek.com sk- filename:yml path:.github
+deepseek sk- filename:lua path:nvim
+DEEPSEEK_API_KEY sk-
+DEEPSEEK_KEY sk-
+deepseek_api_key sk-
+deepseek_key sk-
+DEEPSEEK_TOKEN sk-
+DEEPSEEK_API_TOKEN sk-
+api.deepseek.com OpenAI sk-
+deepseek Authorization Bearer sk-
+deepseek base_url sk-
+deepseek OpenAIClient sk-
+deepseek sk- filename:txt
+deepseek sk- filename:md
+deepseek process.env sk- filename:js
+deepseek sk- filename:py pushed:>2025-01-01
+deepseek sk- filename:envrc
+deepseek sk- filename:html
+deepseek sk- filename:rb
+deepseek sk- filename:rs
+deepseek sk- filename:lua
+deepseek sk- filename:plist
+# === v5 new queries (time-filtered + high-yield 2026 patterns) ===
+deepseek sk- pushed:>2026-05-01
+deepseek sk- pushed:>2026-04-01
+deepseek sk- filename:java pushed:>2026-04-01
+deepseek sk- filename:py pushed:>2026-04-01
+deepseek sk- filename:env pushed:>2026-04-01
+deepseek sk- filename:js pushed:>2026-04-01
+deepseek sk- filename:yml pushed:>2026-04-01
+deepseek sk- filename:json pushed:>2026-04-01
+deepseek API_KEY sk- language:Java NOT test NOT example
+deepseek Authorization sk- language:Python NOT test
+deepseek DEEPSEEK_API_KEY sk- language:TypeScript
+deepseek base_url sk- filename:json
+deepseek sk- path:config
+deepseek sk- path:src/main/resources
+deepseek sk- filename:application.yml
+deepseek sk- filename:application.properties
+deepseek sk- path:.github/workflows
+api.deepseek.com sk- path:src
+deepseek deepseek_api_key sk- filename:env
+deepseek Client sk- filename:kt NOT test
+deepseek import sk- filename:dart
+deepseek sk- filename:ipynb pushed:>2026-01-01
+deepseek OpenAIClient sk- filename:go NOT test
+deepseek sk- filename:toml path:config
+deepseek Authorization Bearer sk- filename:js NOT test
+deepseek process.env.DEEPSEEK sk- filename:ts
