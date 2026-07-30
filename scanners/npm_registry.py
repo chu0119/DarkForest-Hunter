@@ -28,7 +28,8 @@ class NpmScanner(BaseScanner):
 
         sem = asyncio.Semaphore(self.concurrency)
 
-        async with aiohttp.ClientSession() as session:
+        connector = aiohttp.TCPConnector(limit=10)
+        async with aiohttp.ClientSession(connector=connector) as session:
             packages = await self._search_packages(session, query)
             if not packages:
                 return self.results
@@ -45,7 +46,7 @@ class NpmScanner(BaseScanner):
         })
         url = f"{self.REGISTRY}/-/v1/search?{params}"
         try:
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=15)) as resp:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=30, connect=10), proxy=self._proxy) as resp:
                 if resp.status == 200:
                     data = await resp.json()
                     return data.get("objects", [])
@@ -65,7 +66,7 @@ class NpmScanner(BaseScanner):
             try:
                 # Get package metadata for tarball URL
                 pkg_url = f"{self.REGISTRY}/{name}"
-                async with session.get(pkg_url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                async with session.get(pkg_url, timeout=aiohttp.ClientTimeout(total=20, connect=10), proxy=self._proxy) as resp:
                     if resp.status != 200:
                         return
                     data = await resp.json()
@@ -74,7 +75,7 @@ class NpmScanner(BaseScanner):
                 if not tarball_url:
                     return
 
-                async with session.get(tarball_url, timeout=aiohttp.ClientTimeout(total=30)) as resp:
+                async with session.get(tarball_url, timeout=aiohttp.ClientTimeout(total=45, connect=15), proxy=self._proxy) as resp:
                     if resp.status != 200:
                         return
                     tarball_data = await resp.read()

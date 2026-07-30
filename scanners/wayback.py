@@ -28,13 +28,17 @@ class WaybackScanner(BaseScanner):
         return "wayback"
 
     async def search(self, query: str | None = None) -> list[dict]:
-        """query can be a domain or a file path to search for in archived URLs"""
+        """query 可选：传入单个域名只扫该域名；传 None 扫描所有 target_domains。
+        修复：原实现 query 默认 "github.com" 永不为空，导致 target_domains 配置失效。"""
         self.results = []
-        query = query or "github.com"
         sem = asyncio.Semaphore(self.concurrency)
 
-        async with aiohttp.ClientSession() as session:
-            for domain in ([query] if query else self.target_domains):
+        # query 为 None/空 → 扫描全部配置域名；否则只扫传入的域名
+        domains = [query] if query else self.target_domains
+
+        connector = aiohttp.TCPConnector(limit=10)
+        async with aiohttp.ClientSession(connector=connector) as session:
+            for domain in domains:
                 if self._should_stop():
                     break
 
@@ -49,7 +53,6 @@ class WaybackScanner(BaseScanner):
 
     async def _query_cdx(self, session, domain: str) -> list:
         """Query CDX API for archived URLs matching domain, filtering for target file types."""
-        filter_expr = "statuscode:200"
         params = {
             "url": f"*.{domain}/*",
             "output": "json",
@@ -62,7 +65,7 @@ class WaybackScanner(BaseScanner):
         url = f"{self.CDX_API}?{qs}"
 
         try:
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as resp:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=45, connect=15), proxy=self._proxy) as resp:
                 if resp.status == 200:
                     text = await resp.text()
                     lines = text.strip().split("\n")
@@ -91,7 +94,7 @@ class WaybackScanner(BaseScanner):
 
         async with sem:
             try:
-                async with session.get(wayback_url, timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                async with session.get(wayback_url, timeout=aiohttp.ClientTimeout(total=30, connect=10), proxy=self._proxy) as resp:
                     if resp.status == 200:
                         content_type = resp.headers.get("Content-Type", "")
                         if "text" in content_type or "json" in content_type or "javascript" in content_type:

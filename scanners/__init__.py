@@ -1,7 +1,6 @@
 from .base import BaseScanner
 from .github_gist import GistScanner
 from .github_issues import IssuesScanner
-from .github_events import EventsMonitor
 from .github_commits import CommitsScanner
 from .gitlab import GitLabScanner
 from .wayback import WaybackScanner
@@ -12,12 +11,15 @@ from .npm_registry import NpmScanner
 from .huggingface import HuggingFaceScanner
 from .pypi import PyPIScanner
 from .stackoverflow import StackOverflowScanner
+from .github_raw import GitHubRawScanner
+from .pastebin import PastebinScanner
+from .google_dork import GoogleDorkScanner
+from .reddit import RedditScanner
 
 __all__ = [
     "BaseScanner",
     "GistScanner",
     "IssuesScanner",
-    "EventsMonitor",
     "CommitsScanner",
     "GitLabScanner",
     "WaybackScanner",
@@ -28,4 +30,8 @@ __all__ = [
     "HuggingFaceScanner",
     "PyPIScanner",
     "StackOverflowScanner",
+    "GitHubRawScanner",
+    "PastebinScanner",
+    "GoogleDorkScanner",
+    "RedditScanner",
 ]

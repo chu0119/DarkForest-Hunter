@@ -1,0 +1,73 @@
+# DeepSeek Key Hunter - 针对性查询库 v12
+# 基于 715 个已发现 Key 的深度分析
+# 格式: tier|query (tier 越小优先级越高)
+
+# ══════════════════════════════════════════════════════════════
+# Tier 1: 高概率配置文件 (正余额 Key 来源)
+# ══════════════════════════════════════════════════════════════
+1|deepseek sk- filename:config.json
+1|deepseek sk- filename:settings.json
+1|deepseek sk- filename:deepseek.json
+1|deepseek sk- filename:.env.local
+1|deepseek sk- filename:.env.production
+1|deepseek sk- filename:config.py
+1|deepseek sk- filename:settings.py
+
+# ══════════════════════════════════════════════════════════════
+# Tier 2: Python 配置文件 (高产出)
+# ══════════════════════════════════════════════════════════════
+2|deepseek sk- filename:app.py
+2|deepseek sk- filename:main.py
+2|deepseek sk- filename:utils.py
+2|deepseek sk- filename:deepseek.py
+2|deepseek sk- filename:config.py
+2|deepseek sk- filename:settings.py
+
+# ══════════════════════════════════════════════════════════════
+# Tier 3: JavaScript 配置文件
+# ══════════════════════════════════════════════════════════════
+3|deepseek sk- filename:deepseek.js
+3|deepseek sk- filename:config.js
+3|deepseek sk- filename:app.js
+3|deepseek sk- filename:index.js
+3|deepseek sk- filename:main.js
+
+# ══════════════════════════════════════════════════════════════
+# Tier 4: Java 配置文件
+# ══════════════════════════════════════════════════════════════
+4|deepseek sk- filename:application.yml
+4|deepseek sk- filename:application.properties
+4|deepseek sk- filename:DeepSeekService.java
+4|deepseek sk- filename:AppConfig.java
+
+# ══════════════════════════════════════════════════════════════
+# Tier 5: 环境变量文件
+# ══════════════════════════════════════════════════════════════
+5|deepseek sk- filename:.env
+5|deepseek sk- filename:.env.development
+5|deepseek sk- filename:.env.backup
+5|deepseek sk- filename:.env.example
+
+# ══════════════════════════════════════════════════════════════
+# Tier 6: Docker/K8s 配置
+# ══════════════════════════════════════════════════════════════
+6|deepseek sk- filename:docker-compose.yml
+6|deepseek sk- filename:docker-compose.yaml
+6|deepseek sk- filename:Dockerfile
+6|deepseek sk- filename:values.yaml
+
+# ══════════════════════════════════════════════════════════════
+# Tier 7: GitHub Actions/CI
+# ══════════════════════════════════════════════════════════════
+7|deepseek sk- path:.github/workflows
+7|DEEPSEEK_API_KEY path:.github/workflows
+7|deepseek api_key path:.github/workflows
+
+# ══════════════════════════════════════════════════════════════
+# Tier 8: 补充查询
+# ══════════════════════════════════════════════════════════════
+8|deepseek sk- filename:README.md
+8|deepseek sk- filename:docs
+8|deepseek sk- filename:examples
+8|deepseek sk- filename:demo
+8|deepseek sk- filename:test

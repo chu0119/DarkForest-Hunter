@@ -25,29 +25,31 @@ class StackOverflowScanner(BaseScanner):
         self.results = []
         sem = asyncio.Semaphore(self.concurrency)
 
+        # 优化搜索查询：更精确的关键词
         searches = [
-            ("deepseek api_key", "DeepSeek API key questions"),
             ("deepseek sk-", "DeepSeek key pattern"),
+            ("deepseek api_key", "DeepSeek API key"),
             ("DEEPSEEK_API_KEY", "DeepSeek env var"),
-            ("deepseek client initialization", "DeepSeek client setup"),
-            ("deepseek openai python", "DeepSeek OpenAI client"),
         ]
 
-        async with aiohttp.ClientSession() as session:
+        connector = aiohttp.TCPConnector(limit=10)
+        async with aiohttp.ClientSession(connector=connector) as session:
             for q, desc in searches:
                 if self._should_stop():
                     break
-                posts = await self._search_posts(session, q)
+                # 修复：原实现 pages=2×pagesize=100=拉200条，却只扫前20条（80%浪费）。
+                # 现令 pagesize 与扫描数一致，拉多少扫多少，零浪费。
+                posts = await self._search_posts(session, q, pages=1, pagesize=25)
                 self.log(f"SO [{desc}]: {len(posts)} posts")
 
-                tasks = [self._scan_post(session, sem, p) for p in posts[:self.max_posts // len(searches)]]
+                tasks = [self._scan_post(session, sem, p) for p in posts]
                 await asyncio.gather(*tasks)
 
-                await asyncio.sleep(1.0)
+                await asyncio.sleep(2.0)  # 增加延迟避免限流
 
         return self.results
 
-    async def _search_posts(self, session, q: str, pages: int = 5) -> list:
+    async def _search_posts(self, session, q: str, pages: int = 1, pagesize: int = 25) -> list:
         all_items = []
         for page in range(1, pages + 1):
             if self._should_stop():
@@ -56,15 +58,15 @@ class StackOverflowScanner(BaseScanner):
                 "order": "desc",
                 "sort": "creation",
                 "site": "stackoverflow",
-                "intitle": q,
-                "pagesize": 100,
+                "q": q,
+                "pagesize": pagesize,
                 "page": page,
                 "filter": "withbody",
             }
             qs = urllib.parse.urlencode(params)
             url = f"{self.API}/search/advanced?{qs}"
             try:
-                async with session.get(url, timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                async with session.get(url, timeout=aiohttp.ClientTimeout(total=30, connect=10), proxy=self._proxy) as resp:
                     if resp.status == 200:
                         data = await resp.json()
                         items = data.get("items", [])
@@ -105,7 +107,7 @@ class StackOverflowScanner(BaseScanner):
                     }
                     qs = urllib.parse.urlencode(params)
                     url = f"{self.API}/questions/{post_id}/answers?{qs}"
-                    async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                    async with session.get(url, timeout=aiohttp.ClientTimeout(total=20, connect=10), proxy=self._proxy) as resp:
                         if resp.status == 200:
                             data = await resp.json()
                             for ans in data.get("items", []):

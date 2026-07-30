@@ -31,7 +31,8 @@ class HuggingFaceScanner(BaseScanner):
         query = query or "deepseek"
         sem = asyncio.Semaphore(self.concurrency)
 
-        async with aiohttp.ClientSession(headers=self._headers) as session:
+        connector = aiohttp.TCPConnector(limit=10)
+        async with aiohttp.ClientSession(headers=self._headers, connector=connector) as session:
             # Search models
             models = await self._search_models(session, query)
             self.log(f"HF Models: {len(models)} found")
@@ -79,7 +80,7 @@ class HuggingFaceScanner(BaseScanner):
             qs = urllib.parse.urlencode(params)
             url = f"{self.API}/{item_type}s?{qs}"
             try:
-                async with session.get(url, timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                async with session.get(url, timeout=aiohttp.ClientTimeout(total=30, connect=10), proxy=self._proxy) as resp:
                     if resp.status == 200:
                         data = await resp.json()
                         items = []
@@ -122,7 +123,7 @@ class HuggingFaceScanner(BaseScanner):
         readme_url = f"{self.HF_HUB}/{repo_id}/raw/main/README.md"
         async with sem:
             try:
-                async with session.get(readme_url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                async with session.get(readme_url, timeout=aiohttp.ClientTimeout(total=20, connect=10), proxy=self._proxy) as resp:
                     if resp.status == 200:
                         text = await resp.text()
                         for k in extract_keys(text, self.extra_bad):
@@ -135,11 +136,11 @@ class HuggingFaceScanner(BaseScanner):
         """List files in repo and scan target files."""
         api_url = f"{self.API}/{item_type}s/{repo_id}/tree/main/"
         try:
-            async with session.get(api_url, timeout=aiohttp.ClientTimeout(total=15)) as resp:
+            async with session.get(api_url, timeout=aiohttp.ClientTimeout(total=30, connect=10), proxy=self._proxy) as resp:
                 if resp.status != 200:
                     # Try 'master' branch
                     api_url = api_url.replace("/main/", "/master/")
-                    async with session.get(api_url, timeout=aiohttp.ClientTimeout(total=10)) as resp2:
+                    async with session.get(api_url, timeout=aiohttp.ClientTimeout(total=20, connect=10), proxy=self._proxy) as resp2:
                         if resp2.status != 200:
                             return
                         files = await resp2.json()
@@ -175,7 +176,7 @@ class HuggingFaceScanner(BaseScanner):
                 for br in ["main", "master", "HEAD"]:
                     try:
                         url = raw_url.replace("/main/", f"/{br}/")
-                        async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as r:
+                        async with session.get(url, timeout=aiohttp.ClientTimeout(total=20, connect=10), proxy=self._proxy) as r:
                             if r.status == 200:
                                 text = await r.text()
                                 for k in extract_keys(text, self.extra_bad):

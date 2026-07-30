@@ -4,8 +4,9 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.10+-blue?style=flat-square&logo=python" alt="Python">
-  <img src="https://img.shields.io/badge/Scanners-14-green?style=flat-square" alt="Scanners">
-  <img src="https://img.shields.io/badge/Queries-238-red?style=flat-square" alt="Queries">
+  <img src="https://img.shields.io/badge/Sources-16-green?style=flat-square" alt="Sources">
+  <img src="https://img.shields.io/badge/Queries-228-red?style=flat-square" alt="Queries">
+  <img src="https://img.shields.io/badge/Platforms-12-orange?style=flat-square" alt="Platforms">
   <img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="License">
 </p>
 
@@ -18,7 +19,7 @@
 
 ---
 
-> A tool that scans 14 platforms with 238 search patterns to find exposed DeepSeek API keys, validates them, and checks their balance. Built because we were shocked by how many live keys with big balances are sitting in public repos, completely unnoticed.
+> An open-source security research tool that scans public code repositories for leaked AI API keys (DeepSeek first, extended to 12 Chinese and overseas AI platforms), validates each key, and checks its balance. Built because we were shocked by how many live keys with significant balances were sitting in public repos, completely unnoticed.
 
 ---
 
@@ -42,18 +43,26 @@ We built this tool to answer a simple question: **how many DeepSeek keys are exp
 
 ## 🎯 What It Does
 
-Automatically scans **14 platforms** with **238 search patterns** to find publicly exposed DeepSeek API keys, then **validates** each one and **checks the balance**.
+Automatically scans **16 data sources** with **228 search queries** to find publicly exposed AI API keys across **12 platforms**, then **validates** each one and **checks the balance** (where supported).
 
-### Scanning Sources
+### Scanning Sources (16)
 
 | Category | Sources |
 |----------|---------|
-| Code Hosting | GitHub Code Search, Gist, Issues, Commits, GitLab, Gitee |
-| AI Platforms | HuggingFace (Models, Datasets, Spaces) |
-| Package Registries | PyPI, npm |
-| Developer Communities | Stack Overflow |
-| Archives | Docker Hub, Wayback Machine, Common Crawl |
-| Real-time | GitHub Events (PushEvent stream) |
+| GitHub family | GitHub Code Search, Gist, Issues, Commits, GitHub Raw (broad `sk-` scan) |
+| Other code hosting | GitLab, Gitee |
+| AI platforms | HuggingFace (Models / Datasets / Spaces) |
+| Package registries | PyPI, npm |
+| Developer communities | Stack Overflow, Reddit |
+| Paste sites | Pastebin |
+| Containers & archives | Docker Hub, Wayback Machine, Common Crawl |
+| Search engines & dorks | Google Dork |
+
+### Supported AI Platforms (12)
+
+DeepSeek, Kimi (Moonshot), Zhipu (GLM), Qwen (Alibaba), MiniMax, Doubao (ByteDance), Baichuan, Yi (01.AI), Xiaomi, StepFun, SenseNova (SenseTime), Claude (Anthropic).
+
+Balance query is supported on: **deepseek / zhipu / qwen / minimax**. Other platforms validate key validity only.
 
 ### Use Cases
 
@@ -65,75 +74,98 @@ Automatically scans **14 platforms** with **238 search patterns** to find public
 ## 🚀 Quick Start
 
 ```bash
-pip install aiohttp requests
+# Install dependencies
+pip install -r requirements.txt
 
 # Optional: authenticate GitHub CLI for higher rate limits
 gh auth login
 
-# Full scan (10-14 hours)
-python ultimate_scan.py
+# Single-platform DeepSeek scan (recommended entry point)
+python run.py deepseek --proxy http://127.0.0.1:7897
 
-# Quick test (15 minutes)
-python quick_batch.py
+# Multi-platform scan (Chinese AI vendors)
+python run.py multi --providers deepseek kimi qwen zhipu
+
+# Single data source scan
+python run.py source --source huggingface
+
+# List available data sources
+python run.py --list-sources
 ```
 
-### Scan Scripts
+### Three Subcommands
 
-| Script | Description | Duration |
-|--------|-------------|----------|
-| `ultimate_scan.py` | Full 5-phase comprehensive scan | 10-14h |
-| `expanded_scan.py` | Expanded multi-source scan | 3-5h |
-| `max_scan.py` | Maximum throughput scan | 2h |
-| `deep_scan.py --hours N` | Deep optimized scan | Configurable |
-| `quick_batch.py` | Quick batch for testing | 15min |
-| `marathon_scan.py` | Long-running cyclic scan | 6h+ |
+| Command | Purpose | Typical duration |
+|---------|---------|------------------|
+| `run.py deepseek` | Single-platform DeepSeek scan (GitHub + multi-source + validate + balance) | ~100 min (rate-limited) |
+| `run.py multi` | Multi-platform AI key scan across 12 vendors | ~60 min |
+| `run.py source` | Single data source scan (for debugging / targeted hunting) | varies |
+
+> The unified `run.py` replaces the 12 legacy entry scripts (`ultimate_scan.py`, `full_scan.py`, `fast_scan.py`, etc.), which are preserved under `legacy/` for reference but no longer maintained.
 
 ### Programmatic Usage
 
 ```python
-from scanner_engine import ScannerEngine, BUILTIN_QUERIES
+from scanner_engine import ScannerEngine, build_active_queries
+
+# build_active_queries() merges static queries with dynamic rolling time windows
+queries = build_active_queries()
 
 engine = ScannerEngine(
-    concurrency=20,
+    concurrency=15,
     scan_pages=5,
     max_duration=3600,
     output_dir="./results",
+    proxy="http://127.0.0.1:7897",
 )
-results = engine.run(BUILTIN_QUERIES)
+results = engine.run(queries)
 ```
 
 ## 📁 Project Structure
 
 ```
 DarkForest-Hunter/
-├── scanner_engine.py        # Core engine (search + verify + save)
-├── scanners/
-│   ├── base.py              # Base scanner class
-│   ├── github_gist.py       # GitHub Gist scanner
-│   ├── github_issues.py     # GitHub Issues/PRs scanner
-│   ├── github_commits.py    # Commit history + diff scanner
-│   ├── github_events.py     # Real-time PushEvent monitor
-│   ├── gitlab.py            # GitLab scanner
-│   ├── gitee.py             # Gitee scanner
-│   ├── huggingface.py       # HuggingFace scanner
-│   ├── pypi.py              # PyPI scanner
-│   ├── npm_registry.py      # npm registry scanner
-│   ├── stackoverflow.py     # Stack Overflow scanner
-│   ├── docker.py            # Docker Hub scanner
-│   ├── commoncrawl.py       # Common Crawl scanner
-│   └── wayback.py           # Wayback Machine scanner
-├── ultimate_scan.py         # Ultimate scan script
-├── queries_v4.txt           # Query library (238 patterns)
-├── results/                 # Scan output directory
-├── README.md                # This file (English)
-├── README_CN.md             # Chinese version
-├── USAGE.md                 # Detailed usage guide
-└── LICENSE                  # MIT License
+├── run.py                    # Unified CLI entry (subcommands: deepseek / multi / source)
+├── scanner_engine.py         # DeepSeek single-platform engine (queries + GitHub search + verify)
+├── providers.py              # 12 AI platform configs + UnifiedKeyMatcher/Verifier
+├── multi_provider_scan.py    # Multi-platform scanner (GitHub search + concurrent verify)
+├── DarkForestHunter.spec     # PyInstaller config (single portable .exe)
+├── requirements.txt          # Python dependencies
+├── scanners/                 # 17 scanner modules (all inherit BaseScanner)
+│   ├── __init__.py           # Scanner registry exports
+│   ├── base.py               # BaseScanner + extract_keys + _get_with_retry (429 backoff)
+│   ├── github_gist.py        # GitHub Gist scanner
+│   ├── github_issues.py      # GitHub Issues / PRs scanner
+│   ├── github_commits.py     # Commit history + diff scanner
+│   ├── github_events.py      # Real-time PushEvent monitor
+│   ├── github_raw.py         # Broad sk- raw content scan
+│   ├── gitlab.py             # GitLab scanner
+│   ├── gitee.py              # Gitee (code cloud) scanner
+│   ├── huggingface.py        # HuggingFace scanner
+│   ├── pypi.py               # PyPI registry scanner
+│   ├── npm_registry.py       # npm registry scanner
+│   ├── stackoverflow.py      # Stack Overflow scanner
+│   ├── docker.py             # Docker Hub scanner
+│   ├── wayback.py            # Wayback Machine scanner
+│   ├── commoncrawl.py        # Common Crawl scanner
+│   ├── pastebin.py           # Pastebin scanner
+│   ├── google_dork.py        # Google Dork scanner
+│   ├── reddit.py             # Reddit scanner
+│   ├── replicate.py          # Replicate scanner
+│   └── ai_platforms.py       # Civitai / Together / Modal / Groq / DeepInfra / FalAI
+├── legacy/                   # Archived v1.x entry scripts (12 files, not maintained)
+├── results/                  # Scan output (JSON / CSV / Markdown)
+├── README.md                 # This file (English)
+├── README_CN.md              # Chinese version
+├── USAGE.md                  # Detailed usage manual (Chinese)
+├── DEVELOPER.md              # Developer / extension guide (Chinese)
+├── CHANGELOG.md              # Release notes
+└── LICENSE                   # MIT License
 ```
 
 ## ⚠️ Disclaimer
 
-This tool is for **authorized security research, penetration testing, and credential auditing only**. Do not use discovered keys for unauthorized access. The authors assume no liability for misuse. If you discover your own key during a scan, rotate it immediately on the DeepSeek platform.
+This tool is for **authorized security research, penetration testing, and credential auditing only**. Do not use discovered keys for unauthorized access. The authors assume no liability for misuse. If you discover your own key during a scan, rotate it immediately on the corresponding AI platform.
 
 ## 📄 License
 

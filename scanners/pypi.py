@@ -29,7 +29,8 @@ class PyPIScanner(BaseScanner):
         query = query or "deepseek"
         sem = asyncio.Semaphore(self.concurrency)
 
-        async with aiohttp.ClientSession() as session:
+        connector = aiohttp.TCPConnector(limit=10)
+        async with aiohttp.ClientSession(connector=connector) as session:
             packages = await self._search_packages(session, query)
             if not packages:
                 return self.results
@@ -41,33 +42,21 @@ class PyPIScanner(BaseScanner):
         return self.results
 
     async def _search_packages(self, session, q: str) -> list:
-        """Search PyPI via search API."""
+        """Search PyPI via search page. 修复：原实现发了两次几乎一样的请求，
+        且第二次漏了 proxy。合并为一次请求，用两种正则提取包名。"""
         url = f"https://pypi.org/search/?q={q}"
-        # PyPI search page parsing - find package links
         packages = []
         try:
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=15),
-                                   headers={"User-Agent": "DeepSeekKeyHunter/5.0"}) as resp:
-                if resp.status == 200:
-                    text = await resp.text()
-                    # Parse search results for package names
-                    import re
-                    matches = re.findall(r'/project/([^/"\']+)/', text)
-                    packages = list(dict.fromkeys(matches))  # dedup
-        except Exception:
-            pass
-
-        # Also try JSON API search via alternative endpoint
-        try:
-            search_url = f"https://pypi.org/search/?q={q}&page=1"
-            async with session.get(search_url, timeout=aiohttp.ClientTimeout(total=15),
-                                   headers={"User-Agent": "DeepSeekKeyHunter/5.0"}) as resp:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=30, connect=10),
+                                   headers={"User-Agent": "DeepSeekKeyHunter/5.0"}, proxy=self._proxy) as resp:
                 if resp.status == 200:
                     text = await resp.text()
                     import re
-                    # Find all package names in search results
-                    names = re.findall(r'<span class="package-snippet__name">([^<]+)</span>', text)
-                    for name in names:
+                    # 两种正则合并到一次请求：链接形式 + snippet 形式
+                    for name in re.findall(r'/project/([^/"\']+)/', text):
+                        if name not in packages:
+                            packages.append(name)
+                    for name in re.findall(r'<span class="package-snippet__name">([^<]+)</span>', text):
                         clean = name.strip()
                         if clean and clean not in packages:
                             packages.append(clean)
@@ -82,7 +71,7 @@ class PyPIScanner(BaseScanner):
             try:
                 # Get package metadata
                 url = f"{self.JSON_API}/{pkg_name}/json"
-                async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                async with session.get(url, timeout=aiohttp.ClientTimeout(total=20, connect=10), proxy=self._proxy) as resp:
                     if resp.status != 200:
                         return
                     data = await resp.json()
@@ -105,7 +94,7 @@ class PyPIScanner(BaseScanner):
                     return
 
                 # Download sdist
-                async with session.get(download_url, timeout=aiohttp.ClientTimeout(total=60)) as dl:
+                async with session.get(download_url, timeout=aiohttp.ClientTimeout(total=60), proxy=self._proxy) as dl:
                     if dl.status != 200:
                         return
                     content = await dl.read()

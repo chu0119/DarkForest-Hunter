@@ -51,7 +51,8 @@ class CommonCrawlScanner(BaseScanner):
 
         sem = asyncio.Semaphore(self.concurrency)
 
-        async with aiohttp.ClientSession() as session:
+        connector = aiohttp.TCPConnector(limit=10)
+        async with aiohttp.ClientSession(connector=connector) as session:
             urls = await self._query_index(session, query)
             if not urls:
                 return self.results
@@ -73,7 +74,7 @@ class CommonCrawlScanner(BaseScanner):
         urls = []
         try:
             async with session.get(api_url, params=params,
-                                   timeout=aiohttp.ClientTimeout(total=60)) as resp:
+                                   timeout=aiohttp.ClientTimeout(total=90, connect=15), proxy=self._proxy) as resp:
                 if resp.status == 200:
                     text = await resp.text()
                     offset = 0
@@ -117,15 +118,17 @@ class CommonCrawlScanner(BaseScanner):
 
         async with sem:
             try:
-                async with session.get(warc_url,
-                                       headers={"Range": range_header},
-                                       timeout=aiohttp.ClientTimeout(total=30)) as resp:
-                    if resp.status in (200, 206):
-                        data = await resp.read()
-                        text = self._extract_text_from_warc(data)
-                        for k in extract_keys(text, self.extra_bad):
-                            display_url = f"https://web.archive.org/web/{timestamp}/{url}" if timestamp else url
-                            self._add_result(k, display_url, url, "web_page", self.source_name)
+                # _get_with_retry 返回 (status, body_bytes, err)，body 已在连接关闭前读出
+                status, data, err = await self._get_with_retry(
+                    session, warc_url,
+                    headers={"Range": range_header},
+                    timeout_total=45, max_retries=3,
+                )
+                if data is not None and status in (200, 206):
+                    text = self._extract_text_from_warc(data)
+                    for k in extract_keys(text, self.extra_bad):
+                        display_url = f"https://web.archive.org/web/{timestamp}/{url}" if timestamp else url
+                        self._add_result(k, display_url, url, "web_page", self.source_name)
             except Exception:
                 pass
 

@@ -100,15 +100,17 @@ class GiteeScanner(BaseScanner):
 
         for fpath in target[:80]:
             async with sem:
-                try:
-                    params = dict(self._params)
-                    params["ref"] = "master"
-                    qs = urllib.parse.urlencode(params)
-                    raw_url = f"{self.API}/repos/{full_name}/raw/{fpath}?{qs}"
-                    async with session.get(raw_url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
-                        if resp.status == 200:
-                            text = await resp.text()
-                            for k in extract_keys(text, self.extra_bad):
-                                self._add_result(k, html_url, full_name, fpath, self.source_name)
-                except Exception:
-                    pass
+                for branch in ["master", "main"]:
+                    try:
+                        params = dict(self._params)
+                        params["ref"] = branch
+                        qs = urllib.parse.urlencode(params)
+                        raw_url = f"{self.API}/repos/{full_name}/raw/{fpath}?{qs}"
+                        async with session.get(raw_url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                            if resp.status == 200:
+                                text = await resp.text()
+                                for k in extract_keys(text, self.extra_bad):
+                                    self._add_result(k, html_url, full_name, fpath, self.source_name)
+                                break
+                    except Exception:
+                        pass

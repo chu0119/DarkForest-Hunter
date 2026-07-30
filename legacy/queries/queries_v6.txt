@@ -1,0 +1,169 @@
+# DeepSeek Key Hunter - Optimized Query Library v6
+# 基于扫描数据优化：精简低产查询，增强高产查询
+# 格式: tier|query
+# Tier 1-3: 高产 (5 pages)
+# Tier 4-6: 中产 (3 pages)
+# Tier 7-8: 低产 (1 page)
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 1 — 最高产出 (基于扫描数据: .py=194, .properties=63, .yml=47)
+# ═══════════════════════════════════════════════════════════════
+
+# Python (最高产: 194 key)
+1|deepseek sk- filename:py
+1|deepseek sk- language:Python NOT env NOT export
+1|deepseek OpenAI(api_key sk- filename:py
+1|deepseek client sk- filename:py
+1|deepseek def sk- filename:py
+1|deepseek requests sk- filename:py
+1|api.deepseek.com sk- filename:py
+1|deepseek import sk- filename:py
+
+# Java/Kotlin (高产: .properties=63, .java=39, .kt=15)
+1|deepseek sk- filename:java
+1|deepseek sk- filename:properties
+1|deepseek sk- filename:gradle
+1|deepseek sk- filename:kt
+
+# PHP (高产: 33 key)
+1|deepseek sk- filename:php
+1|api.deepseek.com sk- filename:php
+
+# Dart/Flutter (高产: 42 key)
+1|deepseek sk- filename:dart
+1|api.deepseek.com sk- filename:dart
+1|deepseek import sk- filename:dart
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 2 — 配置文件泄露 (基于扫描数据: .yml=47, .env=26, .toml=21)
+# ═══════════════════════════════════════════════════════════════
+
+2|deepseek sk- filename:env
+2|deepseek sk- filename:env.local
+2|deepseek sk- filename:env.production
+2|deepseek sk- filename:env.development
+2|deepseek sk- filename:credentials
+2|deepseek sk- filename:secrets
+2|deepseek sk- filename:yml
+2|deepseek sk- filename:yaml
+2|deepseek sk- filename:json
+2|deepseek sk- filename:toml
+2|deepseek sk- filename:config
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 3 — 变量名 + Shell + 其他语言
+# ═══════════════════════════════════════════════════════════════
+
+# 变量名变体 (高产)
+3|DEEPSEEK_API_KEY sk-
+3|DEEPSEEK_KEY sk-
+3|deepseek_api_key sk-
+3|deepseek_key sk-
+3|DEEPSEEK_TOKEN sk-
+3|DEEPSEEK_API_TOKEN sk-
+
+# Shell 脚本
+3|deepseek sk- filename:sh
+3|deepseek sk- filename:bash
+3|deepseek sk- filename:swift
+
+# Jupyter/Docker
+3|deepseek sk- filename:ipynb
+3|DEEPSEEK_API_KEY sk- filename:ipynb
+3|deepseek sk- filename:dockerfile
+3|deepseek sk- filename:docker-compose
+3|deepseek.com sk- filename:yml path:.github
+
+# JS/TS
+3|deepseek sk- filename:js
+3|deepseek sk- filename:ts
+3|deepseek API_KEY sk- filename:js
+
+# 其他语言
+3|deepseek sk- filename:go
+3|deepseek sk- filename:cs
+3|deepseek sk- filename:rb
+3|deepseek sk- filename:rs
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 4 — API 模式 + 客户端
+# ═══════════════════════════════════════════════════════════════
+
+4|api.deepseek.com OpenAI sk-
+4|deepseek Authorization Bearer sk-
+4|deepseek base_url sk-
+4|deepseek OpenAIClient sk-
+4|deepseek sk- filename:txt
+4|deepseek sk- filename:md
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 5 — 赋值模式 + 环境变量
+# ═══════════════════════════════════════════════════════════════
+
+5|deepseek_api_key = sk-
+5|deepseek_key = sk-
+5|deepseek_token = sk-
+5|process.env.DEEPSEEK
+5|os.environ["DEEPSEEK
+5|os.getenv("DEEPSEEK
+5|class Config deepseek sk-
+5|pydantic deepseek sk-
+5|deepseek.chat.completions sk-
+5|api.deepseek.com/v1 sk-
+5|DeepSeekClient sk-
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 6 — 框架集成 (基于扫描数据: langchain 有产出)
+# ═══════════════════════════════════════════════════════════════
+
+6|langchain deepseek api_key
+6|langchain deepseek sk- filename:py
+6|vllm deepseek sk- filename:yml
+6|open-webui deepseek sk-
+6|dify deepseek api_key
+6|llamaindex deepseek sk-
+6|litellm deepseek api_key
+6|fastgpt deepseek api_key
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 7 — 中文 + 宽泛搜索 + 多平台
+# ═══════════════════════════════════════════════════════════════
+
+# 中文变量名
+7|"deepseek" "密钥"
+7|"deepseek" "API密钥"
+7|"deepseek" "api_key" "sk-"
+
+# 宽泛 sk- 搜索
+7|"sk-" filename:.env
+7|"sk-" "apiKey" filename:.env
+7|"sk-" "DEEPSEEK_API_KEY" filename:.env
+
+# 多平台交叉搜索
+7|"sk-" "moonshot" "deepseek"
+7|"sk-" "kimi" "deepseek"
+7|"sk-" "qwen" "deepseek"
+7|"sk-" "zhipu" "deepseek"
+
+# 部署/运维
+7|"deepseek" filename:deploy
+7|"deepseek" filename:prod
+7|"deepseek" filename:staging
+7|"deepseek" filename:debug
+
+# Docker/Serverless
+7|"deepseek" filename:dockerfile "sk-"
+7|"DEEPSEEK_API_KEY" filename:dockerfile
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 8 — sk-proj- 新格式 + CI/CD
+# ═══════════════════════════════════════════════════════════════
+
+8|"sk-proj-" "deepseek"
+8|"sk-proj-" "api_key"
+8|deepseek ds-
+8|deepseek sk- path:.github/workflows
+8|DEEPSEEK_API_KEY path:.github/workflows
+8|deepseek sk- filename:tf
+8|deepseek sk- path:k8s
+8|deepseek sk- filename:values.yaml

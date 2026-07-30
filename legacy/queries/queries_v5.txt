@@ -1,0 +1,254 @@
+# DeepSeek Key Hunter - Optimized Query Library v5
+# Format: tier|query
+# Tier 1-5: high yield (scan 5 pages)
+# Tier 6-10: medium yield (scan 3 pages)
+# Tier 11-15: low yield (scan 1-2 pages)
+# Lines starting with # are comments, empty lines are skipped
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 1 — 最高产出 (Java/Kotlin/PHP/Python)
+# ═══════════════════════════════════════════════════════════════
+1|deepseek sk- filename:java
+1|deepseek sk- filename:properties
+1|deepseek sk- filename:gradle
+1|deepseek sk- filename:kt
+1|deepseek sk- filename:php
+1|api.deepseek.com sk- filename:php
+1|deepseek sk- language:Python NOT env NOT export
+1|deepseek sk- filename:py NOT env
+1|deepseek OpenAI(api_key sk- filename:py
+1|deepseek client sk- filename:py
+1|deepseek def sk- filename:py
+1|deepseek requests sk- filename:py
+1|api.deepseek.com sk- filename:py
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 2 — 配置文件泄露 (.env / config)
+# ═══════════════════════════════════════════════════════════════
+2|deepseek sk- filename:env
+2|deepseek sk- filename:env.local
+2|deepseek sk- filename:env.production
+2|deepseek sk- filename:env.development
+2|deepseek sk- filename:credentials
+2|deepseek sk- filename:secrets
+2|deepseek sk- filename:yml
+2|deepseek sk- filename:yaml
+2|deepseek sk- filename:json
+2|deepseek sk- filename:toml
+2|deepseek sk- filename:config
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 3 — 移动端 + Shell
+# ═══════════════════════════════════════════════════════════════
+3|deepseek sk- filename:dart
+3|api.deepseek.com sk- filename:dart
+3|deepseek sk- filename:swift
+3|deepseek sk- filename:sh
+3|deepseek sk- filename:bash
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 4 — JS/TS + C++ + Go + C#
+# ═══════════════════════════════════════════════════════════════
+4|deepseek sk- filename:js
+4|deepseek sk- filename:ts
+4|deepseek API_KEY sk- filename:js
+4|deepseek sk- filename:go
+4|deepseek sk- filename:cs
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 5 — Jupyter / Docker / 变量名
+# ═══════════════════════════════════════════════════════════════
+5|deepseek sk- filename:ipynb
+5|DEEPSEEK_API_KEY sk- filename:ipynb
+5|deepseek sk- filename:dockerfile
+5|deepseek sk- filename:docker-compose
+5|deepseek.com sk- filename:yml path:.github
+5|DEEPSEEK_API_KEY sk-
+5|DEEPSEEK_KEY sk-
+5|deepseek_api_key sk-
+5|deepseek_key sk-
+5|DEEPSEEK_TOKEN sk-
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 6 — API 客户端模式
+# ═══════════════════════════════════════════════════════════════
+6|api.deepseek.com OpenAI sk-
+6|deepseek Authorization Bearer sk-
+6|deepseek base_url sk-
+6|deepseek OpenAIClient sk-
+6|deepseek sk- filename:txt
+6|deepseek sk- filename:md
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 7 — 时间限定 (最新结果)
+# ═══════════════════════════════════════════════════════════════
+7|deepseek sk- pushed:>2026-05-01
+7|deepseek sk- filename:py pushed:>2026-05-01
+7|deepseek sk- filename:java pushed:>2026-05-01
+7|deepseek sk- filename:env pushed:>2026-05-01
+7|deepseek sk- filename:js pushed:>2026-05-01
+7|deepseek sk- filename:yml pushed:>2026-05-01
+7|deepseek sk- filename:json pushed:>2026-05-01
+7|deepseek sk- filename:kt pushed:>2026-05-01
+7|deepseek sk- filename:php pushed:>2026-05-01
+7|deepseek sk- filename:go pushed:>2026-05-01
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 8 — 框架集成
+# ═══════════════════════════════════════════════════════════════
+8|langchain deepseek api_key
+8|langchain deepseek sk- filename:py
+8|vllm deepseek sk- filename:yml
+8|open-webui deepseek sk-
+8|dify deepseek api_key
+8|llamaindex deepseek sk-
+8|litellm deepseek api_key
+8|fastgpt deepseek api_key
+8|chatgpt-next-web deepseek sk-
+8|lobechat deepseek sk-
+8|oneapi deepseek sk-
+8|OPENROUTER_API_KEY sk-
+8|openrouter deepseek sk-
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 9 — CI/CD + 部署
+# ═══════════════════════════════════════════════════════════════
+9|deepseek sk- path:.github/workflows
+9|DEEPSEEK_API_KEY path:.github/workflows
+9|deepseek sk- filename:tf
+9|deepseek sk- path:k8s
+9|deepseek sk- filename:values.yaml
+9|deepseek sk- path:deploy
+9|deepseek sk- path:scripts
+9|deepseek sk- filename:bitrise.yml
+9|deepseek sk- filename:appveyor.yml
+9|deepseek sk- filename:travis.yml
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 10 — 变量名变体 + 赋值模式
+# ═══════════════════════════════════════════════════════════════
+10|deepseek_api_key = sk-
+10|deepseek_key = sk-
+10|deepseek_token = sk-
+10|process.env.DEEPSEEK
+10|os.environ["DEEPSEEK
+10|os.getenv("DEEPSEEK
+10|class Config deepseek sk-
+10|pydantic deepseek sk-
+10|deepseek.chat.completions sk-
+10|api.deepseek.com/v1 sk-
+10|DeepSeekClient sk-
+10|x-deepseek-api-key
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 11 — 配置模板/示例 (容易被意外提交)
+# ═══════════════════════════════════════════════════════════════
+11|deepseek sk- filename:env.example
+11|deepseek sk- filename:env.sample
+11|deepseek sk- filename:config.example
+11|deepseek sk- filename:template
+11|deepseek sk- filename:README
+11|deepseek sk- path:.vscode
+11|deepseek sk- filename:.npmrc
+11|deepseek sk- filename:.pypirc
+11|deepseek sk- path:android
+11|deepseek sk- path:ios
+11|deepseek sk- filename:colab
+11|deepseek sk- filename:notebook
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 12 — 小众语言 + 特殊文件
+# ═══════════════════════════════════════════════════════════════
+12|deepseek sk- filename:rb
+12|deepseek sk- filename:rs
+12|deepseek sk- filename:lua
+12|deepseek sk- filename:cpp
+12|deepseek sk- filename:html
+12|deepseek sk- filename:envrc
+12|deepseek sk- filename:sql
+12|deepseek sk- filename:prisma
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 13 — 更多框架 + Agent + RAG
+# ═══════════════════════════════════════════════════════════════
+13|autogen deepseek api_key
+13|crewai deepseek api_key
+13|agno deepseek api_key
+13|ragflow deepseek api_key
+13|quivr deepseek api_key
+13|anythingllm deepseek api_key
+13|vercel deepseek api_key
+13|netlify deepseek api_key
+13|heroku deepseek api_key
+13|railway deepseek api_key
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 14 — 🆕 中文变量名 + 宽泛搜索 (新增高价值)
+# ═══════════════════════════════════════════════════════════════
+14|"deepseek" "密钥"
+14|"deepseek" "API密钥"
+14|"deepseek" "api_key" "sk-"
+14|"deepseek" "接口密钥"
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 15 — 🆕 宽泛 sk- 搜索 (不限于 deepseek)
+# ═══════════════════════════════════════════════════════════════
+15|"sk-" filename:.env
+15|"sk-" "apiKey" filename:.env
+15|"sk-" "secret_key" filename:.env
+15|"sk-" "api_key" filename:config
+15|"sk-" "bearer" filename:.env
+15|"sk-" "token" filename:.env
+15|"sk-" "OPENAI_API_KEY" filename:.env
+15|"sk-" "DEEPSEEK_API_KEY" filename:.env
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 16 — 🆕 多AI平台交叉搜索 (每条独立查询)
+# ═══════════════════════════════════════════════════════════════
+16|"sk-" "moonshot" "deepseek"
+16|"sk-" "kimi" "deepseek"
+16|"sk-" "moonshot" "api_key"
+16|"sk-" "qwen" "deepseek"
+16|"sk-" "zhipu" "deepseek"
+16|"api.moonshot.cn" "sk-"
+16|"api.zhipuai.cn" "sk-"
+16|"sk-" "deepseek" filename:env
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 17 — 🆕 部署/运维/调试文件
+# ═══════════════════════════════════════════════════════════════
+17|"deepseek" filename:deploy
+17|"deepseek" filename:prod
+17|"deepseek" filename:staging
+17|"deepseek" filename:debug
+17|"deepseek" filename:release
+17|"deepseek" "console.log" "sk-"
+17|"deepseek" "print(" "sk-"
+17|"deepseek" "logger" "sk-"
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 18 — 🆕 Docker/容器/Serverless
+# ═══════════════════════════════════════════════════════════════
+18|"deepseek" filename:dockerfile "sk-"
+18|"deepseek" filename:docker-compose "sk-"
+18|"deepseek" path:cloudfunctions
+18|"deepseek" path:supabase/functions
+18|"deepseek" path:netlify/functions
+18|"DEEPSEEK_API_KEY" filename:dockerfile
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 19 — 🆕 游戏引擎/IDE/编辑器配置
+# ═══════════════════════════════════════════════════════════════
+19|"deepseek" sk- filename:cs path:unity
+19|"deepseek" sk- path:.vscode
+19|"deepseek" sk- path:.idea
+19|"deepseek" sk- filename:xcconfig
+19|"deepseek" sk- filename:gradle path:android
+
+# ═══════════════════════════════════════════════════════════════
+#  TIER 20 — 🆕 sk-proj- 新格式 + ds- 前缀
+# ═══════════════════════════════════════════════════════════════
+20|"sk-proj-" "deepseek"
+20|"sk-proj-" "api_key"
+20|deepseek ds-
+20|deepseek "ds-" "api_key"

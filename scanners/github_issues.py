@@ -31,6 +31,14 @@ class IssuesScanner(BaseScanner):
             "deepseek-ai/awesome-deepseek-integration",
             "deepseek-ai/DeepSeek-MoE",
             "deepseek-ai/DeepSeek-V2",
+            "langchain-ai/langchain",
+            "langgenius/dify",
+            "lobehub/lobe-chat",
+            "ChatGPTNextWeb/ChatGPT-Next-Web",
+            "bin-hviene/OpenWebUI",
+            "embedchain/embedchain",
+            "mudler/LocalAI",
+            "oobabooga/text-generation-webui",
         ]
 
         self.target_searches = [
@@ -41,6 +49,10 @@ class IssuesScanner(BaseScanner):
             ('"deepseek" "sk-" is:issue', "Issues with deepseek key"),
             ('"deepseek" "sk-" is:pr', "PRs with deepseek key"),
             ('"deepseek" "sk-" is:issue is:open', "Open issues with deepseek key"),
+            ('"deepseek" "api_key" "sk-" is:issue', "Issues with deepseek api_key"),
+            ('"deepseek" "token" "sk-" is:issue', "Issues with deepseek token"),
+            ('"deepseek" "secret" "sk-" is:issue', "Issues with deepseek secret"),
+            ('"api.deepseek.com" "sk-" is:issue', "Issues with api.deepseek.com"),
         ]
 
     @property
@@ -49,9 +61,10 @@ class IssuesScanner(BaseScanner):
 
     async def search(self, query: str | None = None) -> list[dict]:
         self.results = []
-        searches = self.target_searches
+        # 合并 target_searches 和外部查询
+        searches = list(self.target_searches)
         if query:
-            searches = [(query, "custom")]
+            searches.append((query, "custom"))
 
         sem = asyncio.Semaphore(self.concurrency)
 

@@ -5,17 +5,17 @@ Base class for all scanners.
 import re
 import time
 import hashlib
+import os
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 
-# Key pattern: sk- followed by 32-64 alphanumeric chars
-KEY_PATTERN = re.compile(r"sk-[a-zA-Z0-9]{32,64}")
+# Key pattern: sk- followed by optional proj- prefix and 32-64 alphanumeric chars
+KEY_PATTERN = re.compile(r"sk-(?:proj-)?[a-zA-Z0-9]{32,64}")
 
 BAD_PATTERNS = [
     "your", "xxx", "example", "placeholder", "replace", "here",
-    "demo", "sample", "fake", "dummy", "changeme", "insert",
+    "fake", "dummy", "changeme", "insert",
     "sk-xxxx", "sk-0000", "sk-1111", "sk-aaaa", "sk-bbbb",
-    "sk-proj-",
 ]
 
 # Paths that strongly indicate test/demo keys (low chance of balance)
@@ -80,7 +80,7 @@ def dedup_results(results: list[dict]) -> list[dict]:
 class BaseScanner(ABC):
     def __init__(self, concurrency: int = 10, timeout: int = 15,
                  min_key_length: int = 32, max_key_length: int = 64,
-                 extra_bad_patterns: list = None, session=None):
+                 extra_bad_patterns: list = None, session=None, proxy: str = None):
         self.concurrency = concurrency
         self.timeout = timeout
         self.min_key_length = min_key_length
@@ -88,11 +88,13 @@ class BaseScanner(ABC):
         self.extra_bad = extra_bad_patterns or []
         self._session = session
         self.key_pattern = re.compile(
-            rf"sk-[a-zA-Z0-9]{{{min_key_length},{max_key_length}}}"
+            rf"sk-(?:proj-)?[a-zA-Z0-9]{{{min_key_length},{max_key_length}}}"
         )
         self._stop_requested = False
         self._seen_urls = set()
         self.results: list[dict] = []
+        # Proxy support: use provided proxy or check environment variable
+        self._proxy = proxy or os.environ.get("HTTP_PROXY") or os.environ.get("http_proxy") or None
 
     @abstractmethod
     async def search(self, query: str | None = None) -> list[dict]:
@@ -121,8 +123,54 @@ class BaseScanner(ABC):
             "url": url,
         })
 
+    def log(self, msg: str, level: str = "info"):
+        """Log a message. Override in subclass or set externally."""
+        pass
+
     def _should_stop(self) -> bool:
         return self._stop_requested
 
     def _rate_limit_wait(self, delay: float = 1.0):
         time.sleep(delay)
+
+    async def _get_with_retry(self, session, url, *, headers=None, params=None,
+                               timeout_total=20, max_retries=3, retry_statuses=(429, 503)):
+        """统一的带指数退避 GET 请求。
+        处理 429/503（读 Retry-After 或指数退避）。
+        返回 (status, body_bytes, error)：body_bytes 为响应体字节（已读出，避免 resp 关闭后无法读取）；
+        status 为 None 表示请求失败，此时 error 存放异常。
+        替代各扫描器散落的 `except Exception: pass` 静默吞 429。"""
+        import aiohttp as _aiohttp
+        last_exc = None
+        for attempt in range(max_retries):
+            if self._should_stop():
+                return None, None, None
+            try:
+                async with session.get(
+                    url, headers=headers, params=params,
+                    timeout=_aiohttp.ClientTimeout(total=timeout_total),
+                    proxy=self._proxy,
+                ) as resp:
+                    if resp.status in retry_statuses:
+                        # 优先用服务端 Retry-After，否则指数退避
+                        retry_after = resp.headers.get("Retry-After")
+                        if retry_after:
+                            try:
+                                wait = min(float(retry_after), 60.0)
+                            except ValueError:
+                                wait = min(2 ** attempt * 2, 30.0)
+                        else:
+                            wait = min(2 ** attempt * 2, 30.0)
+                        await __import__("asyncio").sleep(wait)
+                        continue
+                    # 必须在 async-with 内读完 body，否则 resp 关闭后调用方无法读取
+                    body = await resp.read()
+                    return resp.status, body, None
+            except (_aiohttp.ClientError, __import__("asyncio").TimeoutError, OSError) as e:
+                last_exc = e
+                if attempt < max_retries - 1:
+                    await __import__("asyncio").sleep(2 ** attempt)
+                    continue
+                return None, None, last_exc
+        # 重试耗尽
+        return None, None, last_exc

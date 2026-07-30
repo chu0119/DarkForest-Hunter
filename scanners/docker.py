@@ -35,20 +35,22 @@ class DockerHubScanner(BaseScanner):
 
         sem = asyncio.Semaphore(self.concurrency)
 
-        async with aiohttp.ClientSession(headers=self._headers) as session:
+        connector = aiohttp.TCPConnector(limit=10)
+        async with aiohttp.ClientSession(headers=self._headers, connector=connector) as session:
             images = await self._search_images(session, query)
             if not images:
                 return self.results
 
+            # 并发扫描多个镜像（原来是一个个串行 await，是最大的时间瓶颈）
+            targets = []
             for img_summary in images[:self.max_images]:
-                if self._should_stop():
-                    break
-
                 repo_name = img_summary.get("name", "")
                 namespace = img_summary.get("namespace", "")
                 full_name = f"{namespace}/{repo_name}"
+                targets.append(full_name)
 
-                await self._scan_tags(session, sem, full_name)
+            tasks = [self._scan_tags(session, sem, name) for name in targets]
+            await asyncio.gather(*tasks)
 
         return self.results
 
@@ -64,7 +66,7 @@ class DockerHubScanner(BaseScanner):
                     "page_size": 25,
                 })
                 url = f"{self.HUB_API}/search/repositories/?{params}"
-                async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                async with session.get(url, timeout=aiohttp.ClientTimeout(total=20, connect=10), proxy=self._proxy) as resp:
                     if resp.status == 200:
                         data = await resp.json()
                         results = data.get("results", [])
@@ -84,22 +86,27 @@ class DockerHubScanner(BaseScanner):
     async def _scan_tags(self, session, sem, repo_name: str):
         """List tags and scan the most recent ones."""
         try:
-            # List tags (first 5 pages)
+            # List tags (first 2 pages)
             tags = []
             for page in range(1, 3):
                 url = f"{self.HUB_API}/repositories/{repo_name}/tags/?page={page}&page_size=25"
-                async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                async with session.get(url, timeout=aiohttp.ClientTimeout(total=20, connect=10), proxy=self._proxy) as resp:
                     if resp.status == 200:
                         data = await resp.json()
                         page_tags = data.get("results", [])
                         tags.extend(page_tags)
                         if len(page_tags) < 25:
                             break
+
+            # 并发扫描各 tag 的 image layers（原来串行 await）
+            layer_tasks = []
             for tag_info in tags[:10]:
                 tag_name = tag_info.get("name", "latest")
                 images = tag_info.get("images", [])
                 for img in images[:3]:
-                    await self._scan_image_layers(session, sem, repo_name, tag_name, img)
+                    layer_tasks.append(self._scan_image_layers(session, sem, repo_name, tag_name, img))
+            if layer_tasks:
+                await asyncio.gather(*layer_tasks)
         except Exception:
             pass
 
@@ -117,7 +124,7 @@ class DockerHubScanner(BaseScanner):
 
         async with sem:
             try:
-                async with session.get(url, timeout=aiohttp.ClientTimeout(total=15), headers=headers) as resp:
+                async with session.get(url, timeout=aiohttp.ClientTimeout(total=15), headers=headers, proxy=self._proxy) as resp:
                     if resp.status == 200:
                         manifest = await resp.json()
                         config = manifest.get("config", {})
@@ -125,7 +132,7 @@ class DockerHubScanner(BaseScanner):
                         if config_digest:
                             config_url = f"{self.REGISTRY}/v2/{registry_repo}/blobs/{config_digest}"
                             async with session.get(config_url, timeout=aiohttp.ClientTimeout(total=15),
-                                                    headers=self._registry_headers) as c_resp:
+                                                    headers=self._registry_headers, proxy=self._proxy) as c_resp:
                                 if c_resp.status == 200:
                                     config_data = await c_resp.json()
                                     # Scan history for env vars and commands

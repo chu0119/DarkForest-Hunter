@@ -4,8 +4,9 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.10+-blue?style=flat-square&logo=python" alt="Python">
-  <img src="https://img.shields.io/badge/Scanners-14-green?style=flat-square" alt="Scanners">
-  <img src="https://img.shields.io/badge/Queries-238-red?style=flat-square" alt="Queries">
+  <img src="https://img.shields.io/badge/Sources-16-green?style=flat-square" alt="Sources">
+  <img src="https://img.shields.io/badge/Queries-228-red?style=flat-square" alt="Queries">
+  <img src="https://img.shields.io/badge/Platforms-12-orange?style=flat-square" alt="Platforms">
   <img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="License">
 </p>
 
@@ -18,7 +19,7 @@
 
 ---
 
-> 一个用 238 条搜索模式扫描 14 个平台的工具，找出公开暴露的 DeepSeek API Key，然后验证有效性并查询余额。做这个工具是因为我们发现公开仓库里泄露的高余额 key 多到让人震惊，而且已经暴露了几个月甚至更久，完全无人知晓。
+> 一个开源安全研究工具，扫描公开代码仓库里泄露的 AI API Key（以 DeepSeek 为主，扩展到 12 家国内及海外 AI 平台），验证每个 key 的有效性并查询余额。做这个工具是因为我们发现公开仓库里泄露的高余额 key 多到让人震惊，而且已经暴露了几个月甚至更久，完全无人知晓。
 
 ---
 
@@ -42,18 +43,26 @@ DeepSeek 已经成为全球开发者最常用的 AI API 之一。每天，成千
 
 ## 🎯 它能做什么
 
-全自动扫描 **14 个平台**，使用 **238 条搜索模式**，发现公开暴露的 DeepSeek API Key，然后**验证有效性**并**查询余额**。
+全自动扫描 **16 个数据源**，使用 **228 条查询**，发现公开暴露的 AI API Key（覆盖 **12 家平台**），然后**验证有效性**并**查询余额**（在支持的平台）。
 
-### 覆盖的扫描源
+### 覆盖的扫描源（16 个）
 
 | 类别 | 来源 |
 |------|------|
-| 代码托管 | GitHub Code Search、Gist、Issues、Commits、GitLab、Gitee |
+| GitHub 系列 | GitHub Code Search、Gist、Issues、Commits、GitHub Raw（宽泛 `sk-` 搜索） |
+| 其他代码托管 | GitLab、Gitee（码云） |
 | AI 平台 | HuggingFace（Models / Datasets / Spaces） |
 | 包管理器 | PyPI、npm |
-| 开发者社区 | Stack Overflow |
-| 归档/镜像 | Docker Hub、Wayback Machine、Common Crawl |
-| 实时监控 | GitHub Events（PushEvent 流） |
+| 开发者社区 | Stack Overflow、Reddit |
+| 粘贴站 | Pastebin |
+| 容器与归档 | Docker Hub、Wayback Machine、Common Crawl |
+| 搜索引擎 | Google Dork |
+
+### 支持的 AI 平台（12 家）
+
+DeepSeek、Kimi（Moonshot）、智谱（GLM）、通义（阿里）、MiniMax、豆包（字节）、百川、零一（01.AI）、小米、StepFun、商汤（SenseNova）、Claude（Anthropic）。
+
+支持余额查询的平台：**deepseek / zhipu / qwen / minimax**，其余平台只验证有效性。
 
 ### 主要用途
 
@@ -65,75 +74,98 @@ DeepSeek 已经成为全球开发者最常用的 AI API 之一。每天，成千
 ## 🚀 快速开始
 
 ```bash
-pip install aiohttp requests
+# 安装依赖
+pip install -r requirements.txt
 
 # 可选：认证 GitHub CLI 以提升速率限制
 gh auth login
 
-# 全量扫描（10-14小时）
-python ultimate_scan.py
+# 单平台 DeepSeek 扫描（推荐入口）
+python run.py deepseek --proxy http://127.0.0.1:7897
 
-# 快速测试（15分钟）
-python quick_batch.py
+# 多平台扫描（国内 AI 厂商）
+python run.py multi --providers deepseek kimi qwen zhipu
+
+# 单数据源扫描
+python run.py source --source huggingface
+
+# 查看可用数据源
+python run.py --list-sources
 ```
 
-### 扫描脚本
+### 三个子命令
 
-| 脚本 | 说明 | 时长 |
-|------|------|------|
-| `ultimate_scan.py` | 全 5 阶段综合扫描 | 10-14h |
-| `expanded_scan.py` | 扩展多源扫描 | 3-5h |
-| `max_scan.py` | 最大吞吐量扫描 | 2h |
-| `deep_scan.py --hours N` | 深度优化扫描 | 可自定义 |
-| `quick_batch.py` | 快速批量测试 | 15min |
-| `marathon_scan.py` | 长时循环扫描 | 6h+ |
+| 命令 | 用途 | 典型时长 |
+|------|------|----------|
+| `run.py deepseek` | 单平台 DeepSeek 扫描（GitHub + 多源 + 验证 + 查余额） | 约 100 分钟（受限流制约） |
+| `run.py multi` | 多平台 AI Key 扫描（覆盖 12 家厂商） | 约 60 分钟 |
+| `run.py source` | 单数据源扫描（用于调试 / 定向猎取） | 视数据源而定 |
+
+> 统一入口 `run.py` 替代了旧的 12 个入口脚本（`ultimate_scan.py`、`full_scan.py`、`fast_scan.py` 等），旧脚本已归档到 `legacy/` 目录，仅作参考，不再维护。
 
 ### 程序化调用
 
 ```python
-from scanner_engine import ScannerEngine, BUILTIN_QUERIES
+from scanner_engine import ScannerEngine, build_active_queries
+
+# build_active_queries() 合并静态查询与动态滚动时间窗口查询
+queries = build_active_queries()
 
 engine = ScannerEngine(
-    concurrency=20,
+    concurrency=15,
     scan_pages=5,
     max_duration=3600,
     output_dir="./results",
+    proxy="http://127.0.0.1:7897",
 )
-results = engine.run(BUILTIN_QUERIES)
+results = engine.run(queries)
 ```
 
 ## 📁 项目结构
 
 ```
 DarkForest-Hunter/
-├── scanner_engine.py        # 核心引擎（搜索 + 验证 + 保存）
-├── scanners/
-│   ├── base.py              # 基础扫描器类
-│   ├── github_gist.py       # GitHub Gist 扫描器
-│   ├── github_issues.py     # GitHub Issues/PR 扫描器
-│   ├── github_commits.py    # 提交历史 + diff 扫描器
-│   ├── github_events.py     # 实时 PushEvent 监控
-│   ├── gitlab.py            # GitLab 扫描器
-│   ├── gitee.py             # Gitee（码云）扫描器
-│   ├── huggingface.py       # HuggingFace 扫描器
-│   ├── pypi.py              # PyPI 扫描器
-│   ├── npm_registry.py      # npm 注册表扫描器
-│   ├── stackoverflow.py     # Stack Overflow 扫描器
-│   ├── docker.py            # Docker Hub 扫描器
-│   ├── commoncrawl.py       # Common Crawl 扫描器
-│   └── wayback.py           # Wayback Machine 扫描器
-├── ultimate_scan.py         # 终极扫描脚本
-├── queries_v4.txt           # 查询库（238条）
-├── results/                 # 扫描结果目录
-├── README.md                # 英文说明（English）
-├── README_CN.md             # 中文说明（本文件）
-├── USAGE.md                 # 详细使用指南
-└── LICENSE                  # MIT 许可证
+├── run.py                    # 统一 CLI 入口（子命令：deepseek / multi / source）
+├── scanner_engine.py         # DeepSeek 单平台引擎（查询库 + GitHub 搜索 + 验证）
+├── providers.py              # 12 家 AI 平台配置 + UnifiedKeyMatcher/Verifier
+├── multi_provider_scan.py    # 多平台扫描器（GitHub 搜索 + 并发验证）
+├── DarkForestHunter.spec     # PyInstaller 配置（单文件便携 exe）
+├── requirements.txt          # Python 依赖
+├── scanners/                 # 17 个扫描器模块（均继承 BaseScanner）
+│   ├── __init__.py           # 扫描器注册导出
+│   ├── base.py               # BaseScanner + extract_keys + _get_with_retry（429 退避）
+│   ├── github_gist.py        # GitHub Gist 扫描器
+│   ├── github_issues.py      # GitHub Issues / PR 扫描器
+│   ├── github_commits.py     # 提交历史 + diff 扫描器
+│   ├── github_events.py      # 实时 PushEvent 监控
+│   ├── github_raw.py         # 宽泛 sk- raw 内容扫描
+│   ├── gitlab.py             # GitLab 扫描器
+│   ├── gitee.py              # Gitee（码云）扫描器
+│   ├── huggingface.py        # HuggingFace 扫描器
+│   ├── pypi.py               # PyPI 注册表扫描器
+│   ├── npm_registry.py       # npm 注册表扫描器
+│   ├── stackoverflow.py      # Stack Overflow 扫描器
+│   ├── docker.py             # Docker Hub 扫描器
+│   ├── wayback.py            # Wayback Machine 扫描器
+│   ├── commoncrawl.py        # Common Crawl 扫描器
+│   ├── pastebin.py           # Pastebin 扫描器
+│   ├── google_dork.py        # Google Dork 扫描器
+│   ├── reddit.py             # Reddit 扫描器
+│   ├── replicate.py          # Replicate 扫描器
+│   └── ai_platforms.py       # Civitai / Together / Modal / Groq / DeepInfra / FalAI
+├── legacy/                   # v1.x 旧入口脚本归档（12 个文件，不再维护）
+├── results/                  # 扫描结果输出（JSON / CSV / Markdown）
+├── README.md                 # 英文说明
+├── README_CN.md              # 中文说明（本文件）
+├── USAGE.md                  # 详细使用手册
+├── DEVELOPER.md              # 开发者 / 扩展指南
+├── CHANGELOG.md              # 更新日志
+└── LICENSE                   # MIT 许可证
 ```
 
 ## ⚠️ 免责声明
 
-本工具仅用于**授权的安全研究、渗透测试和凭据审计**。使用本工具发现的 API Key 不应被用于未经授权的访问。作者不对任何滥用行为承担责任。如果你在扫描中发现了属于你的 key，请立即在 DeepSeek 平台轮换。
+本工具仅用于**授权的安全研究、渗透测试和凭据审计**。使用本工具发现的 API Key 不应被用于未经授权的访问。作者不对任何滥用行为承担责任。如果你在扫描中发现了属于你的 key，请立即在对应的 AI 平台轮换（吊销并重新生成）。
 
 ## 📄 开源许可
 

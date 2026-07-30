@@ -1,0 +1,75 @@
+# DeepSeek Key Hunter - 精准查询库 v9
+# 基于 313 个已发现 Key 的深度分析
+# 格式: tier|query (tier 越小优先级越高)
+
+# ══════════════════════════════════════════════════════════════
+# Tier 1: 核心高产出查询 (历史验证最有效)
+# ══════════════════════════════════════════════════════════════
+1|deepseek base_url sk-
+1|deepseek sk- filename:py
+1|deepseek sk- filename:env
+1|deepseek sk- filename:java
+1|deepseek sk- filename:js
+1|deepseek Authorization Bearer sk-
+1|DEEPSEEK_API_KEY sk-
+1|deepseek_api_key sk-
+
+# ══════════════════════════════════════════════════════════════
+# Tier 2: 高频文件名查询 (基于文件名分析)
+# ══════════════════════════════════════════════════════════════
+2|deepseek sk- filename:.env
+2|deepseek sk- filename:app.py
+2|deepseek sk- filename:deepseek.js
+2|deepseek sk- filename:deepseek.py
+2|deepseek sk- filename:App.jsx
+2|deepseek sk- filename:utils.py
+2|deepseek sk- filename:DeepSeekService.java
+2|deepseek sk- filename:.env.backup
+2|deepseek sk- filename:.env.local
+2|deepseek sk- filename:config.js
+2|deepseek sk- filename:Chat.jsx
+
+# ══════════════════════════════════════════════════════════════
+# Tier 3: 语言特定查询 (基于语言分布)
+# ══════════════════════════════════════════════════════════════
+3|deepseek sk- language:python
+3|deepseek sk- language:java
+3|deepseek sk- language:javascript
+3|deepseek sk- language:typescript
+3|deepseek sk- language:csharp
+3|deepseek sk- language:jsx
+
+# ══════════════════════════════════════════════════════════════
+# Tier 4: 组合查询 (多关键词)
+# ══════════════════════════════════════════════════════════════
+4|deepseek api_key sk- filename:py
+4|deepseek token sk- filename:env
+4|deepseek secret sk- filename:config
+4|deepseek credential sk- filename:yml
+4|deepseek access_key sk- filename:json
+
+# ══════════════════════════════════════════════════════════════
+# Tier 5: sk-proj- 格式查询 (新版 Key)
+# ══════════════════════════════════════════════════════════════
+5|sk-proj- deepseek
+5|sk-proj- api_key
+5|sk-proj- DEEPSEEK
+5|sk-proj- authorization
+
+# ══════════════════════════════════════════════════════════════
+# Tier 6: 路径特定查询
+# ══════════════════════════════════════════════════════════════
+6|deepseek sk- path:src
+6|deepseek sk- path:lib
+6|deepseek sk- path:app
+6|deepseek sk- path:config
+6|deepseek sk- path:env
+
+# ══════════════════════════════════════════════════════════════
+# Tier 7: 补充查询
+# ══════════════════════════════════════════════════════════════
+7|deepseek OpenAI api_key
+7|deepseek client init
+7|deepseek setup api
+7|deepseek config api_key
+7|deepseek env api_key

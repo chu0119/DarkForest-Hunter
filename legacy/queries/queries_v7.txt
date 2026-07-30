@@ -1,0 +1,44 @@
+# DeepSeek Key Hunter - 优化查询库 v7
+# 基于全量扫描结果优化，只保留高产出查询
+# 格式: tier|query (tier 越小优先级越高)
+
+# ══════════════════════════════════════════════════════════════
+# Tier 1: 核心高产出查询 (历史产出 5+ 结果)
+# ══════════════════════════════════════════════════════════════
+1|deepseek base_url sk-
+1|deepseek sk- filename:js
+1|deepseek sk- filename:md
+1|deepseek sk- filename:json
+1|deepseek Authorization Bearer sk-
+
+# ══════════════════════════════════════════════════════════════
+# Tier 2: 中等产出查询 (历史产出 2-4 结果)
+# ══════════════════════════════════════════════════════════════
+2|DEEPSEEK_API_KEY sk-
+2|deepseek_api_key sk-
+2|deepseek sk- filename:sh
+2|deepseek sk- filename:ts
+2|deepseek API_KEY sk- filename:js
+2|deepseek sk- filename:cs
+2|deepseek ds-
+
+# ══════════════════════════════════════════════════════════════
+# Tier 3: 低产出但有价值的查询 (历史产出 1 结果)
+# ══════════════════════════════════════════════════════════════
+3|deepseek sk- filename:yaml
+3|deepseek sk- filename:rs
+3|deepseek sk- filename:py
+3|deepseek def sk- filename:py
+3|deepseek requests sk- filename:py
+3|deepseek import sk- filename:py
+
+# ══════════════════════════════════════════════════════════════
+# Tier 4: 补充查询 (潜在价值)
+# ══════════════════════════════════════════════════════════════
+4|deepseek OpenAI(api_key sk- filename:py
+4|deepseek client sk- filename:py
+4|api.deepseek.com sk- filename:py
+4|deepseek sk- filename:java
+4|deepseek sk- filename:properties
+4|deepseek sk- filename:env
+4|deepseek DEEPSEEK_API_KEY sk- filename:py

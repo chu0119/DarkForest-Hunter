@@ -1,0 +1,5 @@
+# DarkForest Hunter - Python 依赖
+# 安装: pip install -r requirements.txt
+
+aiohttp>=3.8.0      # 异步 HTTP 客户端（扫描器并发请求）
+requests>=2.28.0    # 同步 HTTP 客户端（GitHub API / DeepSeek 验证）

@@ -1,19 +1,25 @@
-# Sensitive results
+# Sensitive results — 不上传扫描结果(含真实key)
 results/*.json
-results/.tmp_batch/
-!results/deepseek_keys_result.json
+results/*.csv
+results/*.md
+results/.tmp_*/
+results/archive*/
 
 # Python cache
 __pycache__/
 *.pyc
 *.pyo
 *.egg-info/
+
+# PyInstaller 打包产物(便携包单独发布,不入仓库)
 dist/
 build/
+*.spec.bak
 
 # IDE
 .vscode/
 .idea/
+.agentic-security/
 
 # OS
 .DS_Store
@@ -21,9 +27,7 @@ Thumbs.db
 
 # Logs
 *.log
+scan.pid
 
 # Claude
 .claude/
-
-# Temp scripts
-_*.py

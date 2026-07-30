@@ -39,6 +39,14 @@ class GistScanner(BaseScanner):
     async def search(self, query: str | None = None) -> list[dict]:
         self.results = []
         sem = asyncio.Semaphore(self.concurrency)
+        # 解析查询关键词用于过滤
+        search_terms = []
+        if query:
+            search_terms = [t.strip().strip('"') for t in query.split() if len(t.strip()) > 1]
+
+        # 产出熔断：连续 N 页无新 key 即停止翻页（避免空跑几十页浪费时间）
+        max_barren_pages = 3
+        barren_streak = 0
 
         async with aiohttp.ClientSession(headers=self._headers) as session:
             for page in range(1, self.max_pages + 1):
@@ -49,8 +57,28 @@ class GistScanner(BaseScanner):
                 if not gists:
                     break
 
+                # 如果有搜索关键词，先过滤 gists
+                if search_terms:
+                    filtered = []
+                    for g in gists:
+                        desc = (g.get("description") or "").lower()
+                        files_str = " ".join(g.get("files", {}).keys()).lower()
+                        if any(t.lower() in desc or t.lower() in files_str for t in search_terms):
+                            filtered.append(g)
+                    gists = filtered
+
+                results_before = len(self.results)
                 tasks = [self._scan_gist(session, sem, g) for g in gists]
                 await asyncio.gather(*tasks)
+
+                # 产出熔断判断：本页是否带来了新 key
+                if len(self.results) > results_before:
+                    barren_streak = 0
+                else:
+                    barren_streak += 1
+                    if barren_streak >= max_barren_pages:
+                        # 连续多页无产出，继续翻页大概率也是空的，提前结束
+                        break
 
                 if len(gists) < 100:
                     break

@@ -32,11 +32,12 @@ class GitLabScanner(BaseScanner):
         sem = asyncio.Semaphore(self.concurrency)
 
         async with aiohttp.ClientSession(headers=self._headers) as session:
-            projects = await self._search_projects(session, query)
+            # 只搜索前 10 个项目
+            projects = await self._search_projects(session, query, pages=1)
             if not projects:
                 return self.results
 
-            for proj in projects[:self.max_projects]:
+            for proj in projects[:10]:  # 减少到 10 个项目
                 if self._should_stop():
                     break
                 await self._scan_project(session, sem, proj)

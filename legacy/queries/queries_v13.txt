@@ -1,0 +1,73 @@
+# DeepSeek Key Hunter - IDE 配置文件查询库 v13
+# 基于正余额 Key 分析，重点扫描 IDE/编辑器配置文件
+# 格式: tier|query (tier 越小优先级越高)
+
+# ══════════════════════════════════════════════════════════════
+# Tier 1: IDE 配置文件 (正余额 Key 来源)
+# ══════════════════════════════════════════════════════════════
+1|deepseek sk- filename:.continue/config.json
+1|deepseek sk- filename:.claude/settings.json
+1|deepseek sk- filename:.vscode/settings.json
+1|deepseek sk- filename:.idea/workspace.xml
+1|deepseek sk- filename:.cursor/settings.json
+1|deepseek sk- filename:.aider/settings.json
+
+# ══════════════════════════════════════════════════════════════
+# Tier 2: 常见配置文件
+# ══════════════════════════════════════════════════════════════
+2|deepseek sk- filename:appsettings.json
+2|deepseek sk- filename:settings.json
+2|deepseek sk- filename:config.json
+2|deepseek sk- filename:deepseek.json
+2|deepseek sk- filename:.env.local
+2|deepseek sk- filename:.env.production
+
+# ══════════════════════════════════════════════════════════════
+# Tier 3: Python 配置文件
+# ══════════════════════════════════════════════════════════════
+3|deepseek sk- filename:app.py
+3|deepseek sk- filename:main.py
+3|deepseek sk- filename:utils.py
+3|deepseek sk- filename:deepseek.py
+3|deepseek sk- filename:config.py
+3|deepseek sk- filename:settings.py
+
+# ══════════════════════════════════════════════════════════════
+# Tier 4: JavaScript 配置文件
+# ══════════════════════════════════════════════════════════════
+4|deepseek sk- filename:deepseek.js
+4|deepseek sk- filename:config.js
+4|deepseek sk- filename:app.js
+4|deepseek sk- filename:index.js
+4|deepseek sk- filename:main.js
+
+# ══════════════════════════════════════════════════════════════
+# Tier 5: Java 配置文件
+# ══════════════════════════════════════════════════════════════
+5|deepseek sk- filename:application.yml
+5|deepseek sk- filename:application.properties
+5|deepseek sk- filename:DeepSeekService.java
+5|deepseek sk- filename:AppConfig.java
+
+# ══════════════════════════════════════════════════════════════
+# Tier 6: 环境变量文件
+# ══════════════════════════════════════════════════════════════
+6|deepseek sk- filename:.env
+6|deepseek sk- filename:.env.development
+6|deepseek sk- filename:.env.backup
+6|deepseek sk- filename:.env.example
+
+# ══════════════════════════════════════════════════════════════
+# Tier 7: Docker/K8s 配置
+# ══════════════════════════════════════════════════════════════
+7|deepseek sk- filename:docker-compose.yml
+7|deepseek sk- filename:docker-compose.yaml
+7|deepseek sk- filename:Dockerfile
+7|deepseek sk- filename:values.yaml
+
+# ══════════════════════════════════════════════════════════════
+# Tier 8: GitHub Actions/CI
+# ══════════════════════════════════════════════════════════════
+8|deepseek sk- path:.github/workflows
+8|DEEPSEEK_API_KEY path:.github/workflows
+8|deepseek api_key path:.github/workflows
