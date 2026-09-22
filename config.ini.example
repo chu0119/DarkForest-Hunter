@@ -1,0 +1,78 @@
+# DarkForest Hunter — 凭据 & 运行配置（示例）
+# 复制此文件为 config.ini 并填入你的值
+# config.ini 已被 .gitignore 排除，不会同步到 git
+
+[proxy]
+# 代理地址（留空=直连）。Clash/V2Ray 例: http://127.0.0.1:7897
+url =
+# 代理订阅链接(可选): 解析多代理端点实现 per-IP pacing。
+# 支持 VMess/Trojan/Hysteria2/SS 直链和 base64 订阅体。
+# HTTP/SOCKS 直链直接使用;其他协议需本地 Clash/V2Ray 客户端转换。
+# 每个代理 IP 独立限速,某 IP 被 429 不影响其他 IP——核心防撞杠杆。
+# subscription = https://panel.example.com/s/xxxx
+
+[watch]
+interval = 300
+min_balance = 1.0
+verify_interval = 0.25
+verify_workers = 8
+concurrency = 15
+include_github = false
+# 每日重验预算（历史有效 key 轮询重验，默认 1500）
+reverify_budget_per_day = 1500
+# 0 余额 key 重验间隔小时（默认 168=7天；充值检测保留但降频，预算让给活跃 key）
+reverify_zero_interval_hours = 168
+# 高价值邮件阈值 CNY（默认 5）
+hv_email_threshold = 5
+# 重高价值阈值 CNY（默认 10）
+hv_top_threshold = 10
+# 缩水预警百分比（默认 30，余额跌幅超此值触发预警）
+shrink_warn_pct = 30
+# github_commits 源时间窗口（小时，默认 168=最近 1 周提交；0=全量历史）
+commits_since_hours = 168
+# sources = github_search github_commits github_events gitlab npm
+
+[verification]
+# chat /completions 最小探测（默认开）：每 key 通过 GET 验证后补一次
+# max_tokens=1 最小请求确认"实际可用"——微额消耗，显著校准账本口径。
+# 关闭：--no-allow-chat-probe 或改为 false。
+allow_chat_probe = true
+# 不明确平台兜底探测（默认开）：魔搭/NVIDIA/LongCat 的 /models 公开不鉴权，
+# 只读模式无法判定——允许对这三类平台发一次 max_tokens=1 最小探测判定有效性。
+probe_unclear_platforms = true
+
+[deepseek]
+pages = 5
+max_duration = 0
+max_keys = 0
+concurrency = 15
+timeout = 15
+search_delay = 2.5
+
+[github]
+token =
+
+[gitlab]
+token =
+
+[huggingface]
+token =
+
+[docker]
+token =
+
+[SMTP]
+# 告警邮件通知（可选）。SSLP 465 或 STARTTLS 587，例 QQ邮箱 smtp.qq.com:465
+smtp_server =
+smtp_port = 465
+smtp_user =
+smtp_password =
+smtp_from =
+smtp_sender_name = DarkForest Hunter
+smtp_recipients =
+# 启动时是否开启邮件通知（不填则：SMTP 完整时自动开启）
+email_alert_enabled =
+# 邮件始终发送完整 key（不脱敏）。
+email_include_full_key = true
+# 同 key 邮件去重窗口（小时），默认 1；0=每次验证都发。
+email_dedup_hours = 1

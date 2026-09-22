@@ -1,0 +1,424 @@
+deepseek sk- filename:application.yml
+deepseek sk- filename:application.properties
+deepseek sk- filename:.env
+deepseek sk- filename:.env.local
+deepseek sk- filename:.env.production
+deepseek sk- filename:.env.development
+deepseek sk- filename:.env.example
+deepseek sk- filename:.env.backup
+deepseek sk- filename:docker-compose.yml
+deepseek sk- filename:docker-compose.yaml
+deepseek sk- filename:settings.json
+deepseek sk- filename:config.json
+deepseek sk- filename:deepseek.py
+deepseek sk- filename:deepseek.js
+deepseek sk- filename:deepseek.ts
+deepseek sk- filename:config.toml
+deepseek sk- filename:secrets.toml
+deepseek sk- filename:config
+deepseek sk- filename:settings
+deepseek sk- filename:credentials
+deepseek sk- filename:secrets
+deepseek sk- filename:properties
+deepseek sk- filename:.envrc
+deepseek sk- language:Python NOT test NOT example
+deepseek sk- language:Java NOT test NOT example
+deepseek sk- language:JavaScript NOT test NOT example
+deepseek sk- language:TypeScript NOT test NOT example
+deepseek sk- language:Go NOT test NOT example
+deepseek sk- language:C# NOT test NOT example
+deepseek sk- language:PHP NOT test NOT example
+deepseek sk- language:Ruby NOT test NOT example
+deepseek sk- language:Kotlin NOT test NOT example
+deepseek sk- language:Swift NOT test NOT example
+deepseek sk- language:Dart NOT test NOT example
+deepseek sk- language:Rust NOT test NOT example
+deepseek sk- filename:py
+deepseek sk- filename:js
+deepseek sk- filename:ts
+deepseek sk- filename:java
+deepseek sk- filename:kt
+deepseek sk- filename:php
+deepseek sk- filename:go
+deepseek sk- filename:cs
+deepseek sk- filename:rb
+deepseek sk- filename:rs
+deepseek sk- filename:dart
+deepseek sk- filename:swift
+deepseek sk- filename:sh
+deepseek sk- filename:bash
+deepseek sk- filename:yaml
+deepseek sk- filename:toml
+deepseek sk- path:src/main/resources
+deepseek sk- path:config
+deepseek sk- path:.github/workflows
+deepseek sk- path:.env
+deepseek sk- path:deploy
+deepseek sk- path:infra
+deepseek sk- path:scripts
+deepseek sk- path:test
+deepseek sk- path:examples
+DEEPSEEK_API_KEY sk-
+DEEPSEEK_KEY sk-
+DEEPSEEK_TOKEN sk-
+DEEPSEEK_API_TOKEN sk-
+deepseek_api_key sk-
+deepseek_key sk-
+API_KEY sk- sk-
+API_KEY deepseek sk-
+api.deepseek.com sk-
+api.deepseek.com/v1 sk-
+api.deepseek.com/chat sk-
+deepseek Authorization Bearer sk-
+deepseek base_url sk-
+deepseek OpenAIClient sk-
+deepseek client sk-
+deepseek def sk-
+deepseek requests sk-
+deepseek import sk-
+openai api_key deepseek sk-
+# ── OpenAI 兼容模式（很多人用 DeepSeek key 设置为 OPENAI_API_KEY + base_url 指向 deepseek）──
+OPENAI_API_KEY sk- deepseek
+OPENAI_API_KEY sk- api.deepseek.com
+openai base_url deepseek sk-
+openai.api_base deepseek sk-
+base_url deepseek sk-
+base_url api.deepseek.com sk-
+OPENAI_BASE_URL deepseek sk-
+openai client deepseek sk-
+# ── 赋值模式（.env / YAML / 带引号）──
+DEEPSEEK_API_KEY= sk-
+DEEPSEEK_API_KEY="sk-
+DEEPSEEK_API_KEY: sk-
+DEEPSEEK_API_KEY '${
+deepseek_api_key = "sk-
+DEEPSEEK_API_KEY = "sk-
+DEEPSEEK_KEY="sk-
+# ── 更多框架集成 ──
+siliconflow deepseek sk-
+openrouter deepseek sk-
+litellm deepseek sk-
+ragflow deepseek sk-
+anythingllm deepseek sk-
+quivr deepseek sk-
+agno deepseek sk-
+postman deepseek sk-
+# ── 更多文件类型 ──
+deepseek sk- filename:lua
+deepseek sk- filename:sql
+deepseek sk- filename:xml
+deepseek sk- filename:ini
+deepseek sk- filename:cfg
+deepseek sk- filename:ps1
+deepseek sk- filename:Makefile
+# ── 更多路径 ──
+deepseek sk- path:android
+deepseek sk- path:ios
+deepseek sk- path:helm
+deepseek sk- path:.vscode
+langchain deepseek sk-
+vllm deepseek sk-
+open-webui deepseek sk-
+dify deepseek sk-
+fastgpt deepseek sk-
+lobechat deepseek sk-
+oneapi deepseek sk-
+chatgpt-next-web deepseek sk-
+autogen deepseek sk-
+crewai deepseek sk-
+deepseek_api_key = sk-
+deepseek_key = sk-
+deepseek_token = sk-
+deepseek_secret = sk-
+ds_api_key sk-
+ds_key sk-
+DEEPSEEK sk- filename:env
+DEEPSEEK sk- filename:yml
+deepseek secret sk-
+deepseek token sk-
+deepseek key sk-
+deepseek sk- path:.github
+deepseek sk- path:.gitlab
+deepseek sk- filename:dockerfile
+deepseek sk- filename:docker-compose
+deepseek sk- filename:tf
+deepseek sk- filename:hcl
+deepseek sk- filename:values.yaml
+# ===== v2.5: MCP configs, AI agent files, non-standard env (research-backed) =====
+# MCP config files (24,008 secrets, 8.8% valid)
+deepseek sk- filename:mcp.json
+deepseek sk- filename:.cursor/mcp.json
+DEEPSEEK_API_KEY filename:mcp.json
+OPENAI_API_KEY filename:mcp.json
+ANTHROPIC_API_KEY filename:mcp.json
+# AI agent instruction files (new .env, 60% keys still live)
+deepseek sk- filename:GEMINI.md
+deepseek sk- filename:AGENT.md
+deepseek sk- filename:QWEN.md
+deepseek sk- filename:CLAUDE.md
+# Non-standard env files (GitHub native scanning doesn't cover)
+deepseek sk- filename:.env.vercel
+deepseek sk- filename:.env.backup
+deepseek sk- filename:.env.production
+deepseek sk- filename:.env.staging
+deepseek sk- filename:.env.old
+# Docker Compose (hardcoded key hotspot)
+deepseek sk- filename:docker-compose.override.yml
+deepseek sk- filename:docker-compose.prod.yml
+deepseek sk- filename:docker-compose.dev.yml
+# New platform queries
+openrouter sk-or- filename:env
+openrouter sk-or- filename:json
+GROQ_API_KEY gsk_ filename:env
+groq gsk_ filename:py
+REPLICATE_API_TOKEN r8_ filename:env
+replicate r8_ filename:py
+fireworks fw_ filename:env
+siliconflow sk- filename:env
+jina jina_ filename:env
+voyage pa- filename:env
+
+# ===== v2.6: Data-driven optimization (server 4774 keys analysis) =====
+
+# ── OpenRouter queries (PHP #1 source: 87 openrouter vs 64 deepseek) ──
+openrouter sk-or-v1- filename:php
+openrouter sk-or-v1- filename:java
+openrouter sk-or-v1- filename:dart
+openrouter sk-or-v1- filename:properties
+openrouter sk-or-v1- filename:yml
+openrouter sk-or-v1- path:src/main/resources
+OPENROUTER_API_KEY sk-or-v1- filename:env
+openrouter sk-or-v1- filename:json
+
+# ── SiliconFlow queries (25.5 hits/run on java) ──
+siliconflow sk- filename:java
+siliconflow sk- filename:py
+siliconflow sk- filename:cs
+siliconflow sk- filename:yml
+siliconflow sk- filename:properties
+api.siliconflow.cn sk- filename:php
+api.siliconflow.cn sk- filename:ts
+api.siliconflow.cn sk- filename:go
+
+# ── DashScope/Aliyun queries (high yield: 24h/r on generic) ──
+dashscope sk- filename:java
+dashscope sk- filename:py
+dashscope sk- filename:go
+dashscope sk- filename:cs
+dashscope.aliyuncs.com sk- filename:py
+dashscope.aliyuncs.com sk- filename:ts
+dashscope.aliyuncs.com sk- filename:yml
+
+# ── MCP + AI agent config queries (proven OpenRouter source) ──
+sk-or-v1- filename:mcp.json
+sk-or-v1- filename:.cursor/mcp.json
+OPENAI_API_KEY sk- filename:mcp.json
+sk- filename:.cursor/mcp.json
+
+# ── High-yield file patterns from data ──
+deepseek sk- filename:application.yml
+deepseek sk- filename:application.properties
+deepseek sk- filename:application-dev.yml
+deepseek sk- filename:application-prod.yml
+deepseek sk- filename:bootstrap.yml
+deepseek sk- filename:config.properties
+
+# ── Path-based deep queries (src/main/resources = 27 hits/run) ──
+deepseek sk- path:src/main/resources filename:yml
+deepseek sk- path:src/main/resources filename:properties
+openrouter sk-or-v1- path:src/main/resources filename:yml
+openrouter sk-or-v1- path:src/main/resources filename:properties
+siliconflow sk- path:src/main/resources
+
+# ── Go-specific (growing: 112 Go files in DB) ──
+deepseek sk- filename:go NOT test NOT vendor
+api.deepseek.com sk- filename:go
+openrouter sk-or-v1- filename:go
+
+
+# ===== v2.7: Kimi queries (99.2% valid rate, but ZERO dedicated queries!) =====
+# All 122 Kimi keys are side-effects of deepseek sk- queries
+kimi sk- filename:py
+moonshot sk- filename:js
+api.moonshot.cn sk- filename:java
+KIMI_API_KEY sk- filename:json
+MOONSHOT_API_KEY sk- filename:env
+moonshot sk- filename:ipynb
+kimi sk- filename:ts
+api.kimi.com sk- filename:java
+moonshot sk- filename:go
+kimi sk- filename:kt
+KIMI_API_KEY sk- filename:py
+MOONSHOT_API_KEY sk- filename:yml
+
+# ===== QwenCode queries (66.7% valid, sk-sp- now correctly routed) =====
+sk-sp- filename:java
+sk-sp- filename:py
+sk-sp- filename:env
+QWEN_CODING_KEY sk-sp- filename:env
+coding.dashscope.aliyuncs.com sk-sp- filename:java
+
+# ===== MCP config files (8.8% verified-valid per GitGuardian 2026) =====
+filename:claude_desktop_config.json sk-
+filename:.mcp.json sk-
+filename:mcp_config.json sk-
+filename:.cursor/mcp.json sk-or-v1-
+filename:.mcp.json sk-or-v1-
+
+# ===== OpenRouter extension coverage (818 keys but 0% from dedicated queries) =====
+openrouter sk-or-v1- filename:py
+openrouter sk-or-v1- filename:js
+openrouter sk-or-v1- filename:kt
+openrouter sk-or-v1- filename:ts
+openrouter sk-or-v1- filename:cs
+openrouter sk-or-v1- filename:ipynb
+openrouter sk-or-v1- filename:md
+openrouter sk-or-v1- filename:yaml
+openrouter sk-or-v1- filename:go
+openrouter.ai sk-or-v1- filename:java
+openrouter.ai sk-or-v1- filename:py
+
+# ===== High-yield clones from data =====
+deepseek sk- filename:py NOT vendor
+deepseek sk- filename:ipynb NOT test
+deepseek sk- path:src/main/resources filename:py
+dashscope sk- filename:ipynb
+siliconflow sk- filename:ipynb
+kimi sk- path:src/main/resources
+# ── 2026-09 第二批平台 (v2.4.0): OpenAI/Gemini/xAI/混元/千帆/魔搭/NVIDIA/LongCat ──
+# 约定: 不含 pushed:(watch 路径不过滤日期,硬编码会过期;时间窗口由 build_active_queries 动态注入)。
+# 专有前缀(sk-proj-/bce-v3/nvapi-)可直接做搜索词;噪声前缀(ms- 是 CSS 前缀、xai 是可解释 AI
+# 高频词、AIza 为 Google 全家桶共用)必须配平台语境词提精度。
+
+# OpenAI (泄露量最大;sk-proj- 专有前缀)
+sk-proj-
+OPENAI_API_KEY sk-proj-
+OPENAI_API_KEY sk-proj- filename:env
+sk-proj- filename:env
+sk-proj- filename:py
+sk-proj- filename:js
+sk-proj- filename:ts
+sk-proj- filename:yml
+sk-proj- filename:json
+sk-proj- filename:ipynb
+api.openai.com sk-proj-
+OPENAI_KEY sk-
+
+# Google Gemini (AIza 为 Google 全家桶共用,配语境词;不带 AIza 的行兼容新 AQ.Ab 格式)
+GEMINI_API_KEY AIza
+GOOGLE_API_KEY AIza
+generativelanguage.googleapis.com AIza
+GEMINI_API_KEY AIza filename:env
+GOOGLE_API_KEY AIza filename:py
+GEMINI_API_KEY
+GOOGLE_API_KEY
+gemini api_key filename:env
+
+# xAI Grok
+XAI_API_KEY xai-
+GROK_API_KEY xai-
+api.x.ai xai-
+XAI_API_KEY xai- filename:env
+api.x.ai xai- filename:py
+
+# 腾讯混元 (sk- 通用格式,靠域名/变量名)
+api.hunyuan.cloud.tencent.com sk-
+HUNYUAN_API_KEY sk-
+hunyuan sk- filename:env
+hunyuan sk- filename:py
+
+# 百度千帆 (bce-v3 前缀专有)
+bce-v3
+QIANFAN_API_KEY bce-v3
+qianfan.baidubce.com bce-v3
+bce-v3 filename:env
+
+# 魔搭 ModelScope ("ms-" 有 CSS 前缀噪声,必须配平台词)
+MODELSCOPE_API_KEY ms-
+api-inference.modelscope.cn ms-
+modelscope ms- filename:py
+MODELSCOPE_TOKEN ms-
+modelscope api-key filename:env
+
+# NVIDIA NIM (nvapi- 专有前缀)
+nvapi-
+NVIDIA_API_KEY nvapi-
+integrate.api.nvidia.com nvapi-
+build.nvidia.com nvapi-
+nvapi- filename:env
+nvapi- filename:py
+
+# 美团 LongCat
+api.longcat.chat sk-
+LONGCAT_API_KEY
+longcat sk- filename:env
+LongCat-Flash sk-
+MOONSHOT_API_KEY filename:.env NOT example
+KIMI_API_KEY filename:.env NOT example
+api.moonshot.cn sk- language:Go NOT test NOT example
+api.moonshot.cn sk- language:Bash NOT example
+kimi sk- filename:ipynb NOT example
+moonshot-ai sk- path:.github/workflows
+sk-kimi- filename:json NOT example
+sk-kimi- path:.claude
+KIMI_CODING_API_KEY filename:toml
+ZHIPUAI_API_KEY filename:.env NOT example
+open.bigmodel.cn filename:php
+ZHIPU_API_KEY language:TypeScript NOT test
+open.bigmodel.cn/api/coding GLM_CODING_KEY
+open.bigmodel.cn filename:docker-compose.yml
+deepseek sk- path:src filename:py
+DEEPSEEK_API_KEY filename:env NOT example
+deepseek sk- path:backend filename:ts
+api.deepseek.com filename:application.yml
+deepseek sk- filename:config.py NOT test
+deepseek sk- language:Go NOT example
+deepseek sk- filename:php NOT vendor
+dashscope.aliyuncs.com sk- path:src filename:py
+DASHSCOPE_API_KEY filename:env NOT example
+dashscope.aliyuncs.com sk- filename:yml NOT test
+qwen sk- path:backend
+sk-ws- filename:env
+coding.dashscope.aliyuncs.com sk-sp-
+QWEN_CODING_KEY sk-sp- filename:py
+tongyi sk- filename:ipynb
+OPENROUTER_API_KEY filename:env NOT example
+sk-or-v1- filename:toml NOT example
+sk-or-v1- path:.github/workflows
+sk-or-v1- filename:sql
+OPENROUTER_API_KEY filename:dart NOT test
+sk-or-v1- path:new-api
+SILICONFLOW_API_KEY path:dify
+SILICONFLOW_API_KEY path:fastgpt
+api.siliconflow.cn sk- filename:vue
+api.siliconflow.cn sk- filename:properties NOT test
+api.siliconflow.cn path:one-api
+api.siliconflow.cn sk- filename:sh
+api-inference.modelscope.cn ms- filename:ipynb
+modelscope ms- filename:yaml
+ModelScope ms- filename:py NOT test
+modelscope ms- filename:json
+ms- path:notebooks modelscope
+NVIDIA_API_KEY filename:env NOT example
+nvapi- path:.streamlit
+nvapi- filename:toml
+integrate.api.nvidia.com nvapi- filename:md
+nvapi- path:kubernetes filename:secrets.yaml
+sk-proj- path:.github/workflows
+OPENAI_API_KEY sk-proj- filename:.env.local
+sk-proj- path:.vercel
+sk-proj- filename:properties
+sk-ant-api03-
+sk-ant-api03- filename:env
+ANTHROPIC_API_KEY filename:.env.local
+sk-ant- path:.claude
+claude_desktop_config.json sk-ant
+sk-ant- path:.cursor/mcp.json
+sk-ant-oat01-
+AQ.Ab filename:env
+GEMINI_API_KEY AQ filename:env
+AIza filename:google-services.json
+generativelanguage.googleapis.com "key="
+GOOGLE_API_KEY filename:dart
+GEMINI_API_KEY filename:ipynb
+AQ.Ab path:aistudio

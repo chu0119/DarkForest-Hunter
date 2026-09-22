@@ -1,0 +1,4 @@
+# 开发/测试依赖
+# 安装: pip install -r requirements-dev.txt
+pytest>=7.0
+ruff>=0.6.0

@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "darkforest-hunter"
+version = "2.5.4"
+description = "Scan public code sources for leaked AI API keys; validate read-only and check balance."
+readme = "README.md"
+# 扫描器统一使用 asyncio.timeout(Python 3.11+)——3.10 声明与实现不符,
+# 在 3.10 上全部外源扫描器入口即 AttributeError
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "xingchuan" }]
+keywords = ["security", "secret-scanning", "api-keys", "deepseek", "osint"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "aiohttp>=3.8.0",
+    "requests>=2.28.0",
+    "rich>=13.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/xingchuan/deepseek-key-hunter"
+
+# 说明：项目仍以脚本方式运行（python run.py ...）+ PyInstaller 单文件 exe 分发，
+# 故不提供 console_script 入口；运行入口见 run.py。
+
+[tool.setuptools]
+# 纯脚本布局：显式声明顶层模块，避免把 tests/ 当包打包
+py-modules = [
+    "run", "scanner_engine", "providers",
+    "watch_tui", "config_loader", "query_rotation", "query_enumerator",
+    "watch_persistence", "mihomo_manager",
+    "store", "logging_setup",
+    "email_notifier", "rate_scheduler", "proxy_resolver", "trend_monitor",
+]
+packages = ["scanners", "scripts"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+# E=pycodestyle errors, F=pyflakes, I=isort, UP=pyupgrade, B=bugbear
+select = ["E", "F", "I", "UP", "B"]
+ignore = [
+    "E501",   # line too long（查询库/中文注释有大量长行，不在风格范围内强制）
+    "E741",   # ambiguous variable name（数学风格短名 i/k 等可接受）
+    "B008",   # function call in default argument（Engine 的常见模式）
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]   # pytest.fail / assert False 在测试里合法
+"scripts/*" = ["B008"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["scanners", "scripts", "providers", "scanner_engine"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

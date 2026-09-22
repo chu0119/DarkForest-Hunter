@@ -1,0 +1,76 @@
+# Sensitive results — 不上传扫描结果(含真实key)
+results/*.json
+results/*.csv
+results/*.md
+results/*.db
+results/*.sqlite*
+results/.tmp_*/
+results/archive*/
+# v2.4.9: mihomo 配置含代理凭据,曾因 *.yaml 无规则被入库
+results/*.yaml
+results/
+
+# 凭据配置文件（含 token/keys，禁止同步）
+config.ini
+*.ini
+!.ini.example
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# PyInstaller 打包产物(便携包单独发布,不入仓库)
+dist/
+build/
+*.spec.bak
+
+# IDE
+.vscode/
+.idea/
+.agentic-security/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+scan.pid
+
+# Claude
+.claude/
+
+# Google API Key
+.env.google_search
+
+# 清理前的归档目录（含真实 key，禁止同步）
+results_archive_*/
+
+# 清理备份目录（含历史数据/真实 key）
+_backup_*/
+results/*.bak
+results/*.jsonl
+queries_generated.txt
+.tmp_pytest/
+.runtime_deps/
+.review_tmp/
+results/watch.pid
+
+# v2.4.9: 二进制与运行时下载物(mihomo 25MB 二进制曾入库)
+bin/
+
+# 插件本地状态(会话事件/报告,纯本地产物)
+.mimosa/
+
+# 运行时备份目录(含真实 key/台账/代理凭据,绝不入库)
+results_backup_*/
+
+# 插件本地状态
+.v2c/
+.video_agent/
+
+# AI 代码分析器自动生成产物(含本地路径,不入库)
+.analysis_report.md
